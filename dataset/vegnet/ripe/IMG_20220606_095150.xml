@@ -1,0 +1,26 @@
+<annotation>
+	<folder>Ripe</folder>
+	<filename>IMG_20220606_095150.jpg</filename>
+	<path>/Users/ishu/Downloads/VegNet Vegetable Dataset with quality (Unripe, Ripe, Old, Dried and Damaged)/New VegNet/1. Bell Pepper/Ripe/IMG_20220606_095150.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>256</width>
+		<height>256</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>pepper</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>103</xmin>
+			<ymin>53</ymin>
+			<xmax>213</xmax>
+			<ymax>190</ymax>
+		</bndbox>
+	</object>
+</annotation>
