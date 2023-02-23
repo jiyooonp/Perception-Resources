@@ -4,7 +4,7 @@ Delete files that are not annotated
 import os
 import glob
 
-fileName = 'set2'
+fileName = 'set3'
 path = '../dataset/'+fileName
 os.chdir(path)
 
