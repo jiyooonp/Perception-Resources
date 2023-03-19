@@ -1,0 +1,16 @@
+class Perception:
+    def __init__(self, source, fps, save=True):
+    def get_image(self):
+    def get_depth(self, image, x, y):
+    def process_image(self):
+    def detect_peppers_one_frame(self, thresh):
+    def detect_peppers_time_frame(self, thresh, frames):
+    def clear_false_positives(self):
+    def set_target_pepper(self, pepper_index):
+    def get_peduncle_location(self):
+    def get_point_of_interaction(self):
+    def get_peduncle_orientation(self):
+    def send_to_manipulator(self):
+    def send_to_gui(self):
+    def get_from_gui(self):
+

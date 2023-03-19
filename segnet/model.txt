@@ -1,0 +1,213 @@
+
+Trying to make sense of why loading the model weights are throwing an error
+
+Error:
+    ValueError: Shapes (1, 1, 64, 5) and (6, 64, 1, 1) are incompatible
+Solution:
+    changed from 1. to 2.
+        1. model = segnet((224,224,3), n_labels=5 ,kernel=3, pool_size=(2,2), output_mode="softmax")
+        2. model = segnet((224,224,3), n_labels=6 ,kernel=3, pool_size=(2,2), output_mode="softmax")
+
+Build enceder done..
+Build decoder done..
+Model: "SegNet"
+___________________________________________________________________________________________________________________________________________________________________________________
+ Layer (type)                   Output Shape         Param #     Connected to                       Models in Code
+===================================================================================================================================================================================
+ input_1 (InputLayer)           [(None, 224, 224, 3  0           []                                 inputs = Input(shape=input_shape)
+                                )]
+
+
+ conv2d (Conv2D)                (None, 224, 224, 64  1792        ['input_1[0][0]']                  conv_1 = Convolution2D(64, (kernel, kernel), padding="same")(inputs)
+                                )
+
+ batch_normalization (BatchNorm  (None, 224, 224, 64  256        ['conv2d[0][0]']                   conv_1 = BatchNormalization()(conv_1)
+ alization)                     )
+
+ activation (Activation)        (None, 224, 224, 64  0           ['batch_normalization[0][0]']      conv_1 = Activation("relu")(conv_1)
+                                )
+
+ conv2d_1 (Conv2D)              (None, 224, 224, 64  36928       ['activation[0][0]']               conv_2 = Convolution2D(64, (kernel, kernel), padding="same")(conv_1)
+                                )
+
+ batch_normalization_1 (BatchNo  (None, 224, 224, 64  256        ['conv2d_1[0][0]']                 conv_2 = BatchNormalization()(conv_2)
+ rmalization)                   )
+
+ activation_1 (Activation)      (None, 224, 224, 64  0           ['batch_normalization_1[0][0]']    conv_2 = Activation("relu")(conv_2)
+                                )
+
+ max_pooling_with_argmax2d (Max  [(None, 112, 112, 6  0          ['activation_1[0][0]']             pool_1, mask_1 = MaxPoolingWithArgmax2D(pool_size)(conv_2)
+ PoolingWithArgmax2D)           4),
+                                 (None, 112, 112, 6
+                                4)]
+
+ conv2d_2 (Conv2D)              (None, 112, 112, 12  73856       ['max_pooling_with_argmax2d[0][0]  conv_3 = Convolution2D(128, (kernel, kernel), padding="same")(pool_1)
+                                8)                               ']
+
+ batch_normalization_2 (BatchNo  (None, 112, 112, 12  512        ['conv2d_2[0][0]']                 conv_3 = BatchNormalization()(conv_3)
+ rmalization)                   8)
+
+ activation_2 (Activation)      (None, 112, 112, 12  0           ['batch_normalization_2[0][0]']    conv_3 = Activation("relu")(conv_3)
+                                8)
+
+ conv2d_3 (Conv2D)              (None, 112, 112, 12  147584      ['activation_2[0][0]']             conv_4 = Convolution2D(128, (kernel, kernel), padding="same")(conv_3)
+                                8)
+
+ batch_normalization_3 (BatchNo  (None, 112, 112, 12  512        ['conv2d_3[0][0]']                 conv_4 = BatchNormalization()(conv_4)
+ rmalization)                   8)
+
+ activation_3 (Activation)      (None, 112, 112, 12  0           ['batch_normalization_3[0][0]']    conv_4 = Activation("relu")(conv_4)
+                                8)
+
+ max_pooling_with_argmax2d_1 (M  [(None, 56, 56, 128  0          ['activation_3[0][0]']             pool_2, mask_2 = MaxPoolingWithArgmax2D(pool_size)(conv_4)
+ axPoolingWithArgmax2D)         ),
+                                 (None, 56, 56, 128
+                                )]
+
+ conv2d_4 (Conv2D)              (None, 56, 56, 256)  295168      ['max_pooling_with_argmax2d_1[0][  conv_5 = Convolution2D(256, (kernel, kernel), padding="same")(pool_2)
+                                                                 0]']
+
+ batch_normalization_4 (BatchNo  (None, 56, 56, 256)  1024       ['conv2d_4[0][0]']                 conv_5 = BatchNormalization()(conv_5)
+ rmalization)
+
+ activation_4 (Activation)      (None, 56, 56, 256)  0           ['batch_normalization_4[0][0]']    conv_5 = Activation("relu")(conv_5)
+
+ conv2d_5 (Conv2D)              (None, 56, 56, 256)  590080      ['activation_4[0][0]']             conv_6 = Convolution2D(256, (kernel, kernel), padding="same")(conv_5)
+
+ batch_normalization_5 (BatchNo  (None, 56, 56, 256)  1024       ['conv2d_5[0][0]']                 conv_6 = BatchNormalization()(conv_6)
+ rmalization)
+
+ activation_5 (Activation)      (None, 56, 56, 256)  0           ['batch_normalization_5[0][0]']    conv_6 = Activation("relu")(conv_6)
+
+ max_pooling_with_argmax2d_2 (M  [(None, 28, 28, 256  0          ['activation_5[0][0]']             pool_3, mask_3 = MaxPoolingWithArgmax2D(pool_size)(conv_6)
+ axPoolingWithArgmax2D)         ),
+                                 (None, 28, 28, 256
+                                )]
+
+ conv2d_6 (Conv2D)              (None, 28, 28, 512)  1180160     ['max_pooling_with_argmax2d_2[0][  conv_8 = Convolution2D(512, (kernel, kernel), padding="same")(pool_3)
+                                                                 0]']
+
+ batch_normalization_6 (BatchNo  (None, 28, 28, 512)  2048       ['conv2d_6[0][0]']                 conv_8 = BatchNormalization()(conv_8)
+ rmalization)
+
+ activation_6 (Activation)      (None, 28, 28, 512)  0           ['batch_normalization_6[0][0]']    conv_8 = Activation("relu")(conv_8)
+
+ max_pooling_with_argmax2d_3 (M  [(None, 14, 14, 512  0          ['activation_6[0][0]']             pool_4, mask_4 = MaxPoolingWithArgmax2D(pool_size)(conv_8)
+ axPoolingWithArgmax2D)         ),
+                                 (None, 14, 14, 512
+                                )]
+
+ conv2d_7 (Conv2D)              (None, 14, 14, 512)  2359808     ['max_pooling_with_argmax2d_3[0][  conv_11 = Convolution2D(512, (kernel, kernel), padding="same")(pool_4)
+                                                                 0]']
+
+ batch_normalization_7 (BatchNo  (None, 14, 14, 512)  2048       ['conv2d_7[0][0]']                 conv_11 = BatchNormalization()(conv_11)
+ rmalization)
+
+ activation_7 (Activation)      (None, 14, 14, 512)  0           ['batch_normalization_7[0][0]']    conv_11 = Activation("relu")(conv_11)
+
+ max_pooling_with_argmax2d_4 (M  [(None, 7, 7, 512),  0          ['activation_7[0][0]']             pool_5, mask_5 = MaxPoolingWithArgmax2D(pool_size)(conv_11)
+ axPoolingWithArgmax2D)          (None, 7, 7, 512)]
+
+ max_unpooling2d (MaxUnpooling2  (None, 14, 14, 512)  0          ['max_pooling_with_argmax2d_4[0][  unpool_1 = MaxUnpooling2D(pool_size)([pool_5, mask_5])
+ D)                                                              0]',
+                                                                  'max_pooling_with_argmax2d_4[0][
+                                                                 1]']
+
+ conv2d_8 (Conv2D)              (None, 14, 14, 512)  2359808     ['max_unpooling2d[0][0]']          conv_14 = Convolution2D(512, (kernel, kernel), padding="same")(unpool_1)
+
+ batch_normalization_8 (BatchNo  (None, 14, 14, 512)  2048       ['conv2d_8[0][0]']                 conv_14 = BatchNormalization()(conv_14)
+ rmalization)
+
+ activation_8 (Activation)      (None, 14, 14, 512)  0           ['batch_normalization_8[0][0]']    conv_14 = Activation("relu")(conv_14)
+
+ max_unpooling2d_1 (MaxUnpoolin  (None, 28, 28, 512)  0          ['activation_8[0][0]',             unpool_2 = MaxUnpooling2D(pool_size)([conv_14, mask_4])
+ g2D)                                                             'max_pooling_with_argmax2d_3[0][
+                                                                 1]']
+
+ conv2d_9 (Conv2D)              (None, 28, 28, 512)  2359808     ['max_unpooling2d_1[0][0]']        conv_17 = Convolution2D(512, (kernel, kernel), padding="same")(unpool_2)
+
+ batch_normalization_9 (BatchNo  (None, 28, 28, 512)  2048       ['conv2d_9[0][0]']                 conv_17 = BatchNormalization()(conv_17)
+ rmalization)
+
+ activation_9 (Activation)      (None, 28, 28, 512)  0           ['batch_normalization_9[0][0]']    conv_17 = Activation("relu")(conv_17)
+
+ conv2d_10 (Conv2D)             (None, 28, 28, 256)  1179904     ['activation_9[0][0]']             conv_19 = Convolution2D(256, (kernel, kernel), padding="same")(conv_17)
+
+ batch_normalization_10 (BatchN  (None, 28, 28, 256)  1024       ['conv2d_10[0][0]']                conv_19 = BatchNormalization()(conv_19)
+ ormalization)
+
+ activation_10 (Activation)     (None, 28, 28, 256)  0           ['batch_normalization_10[0][0]']   conv_19 = Activation("relu")(conv_19)
+
+ max_unpooling2d_2 (MaxUnpoolin  (None, 56, 56, 256)  0          ['activation_10[0][0]',            unpool_3 = MaxUnpooling2D(pool_size)([conv_19, mask_3])
+ g2D)                                                             'max_pooling_with_argmax2d_2[0][
+                                                                 1]']
+
+ conv2d_11 (Conv2D)             (None, 56, 56, 256)  590080      ['max_unpooling2d_2[0][0]']        conv_20 = Convolution2D(256, (kernel, kernel), padding="same")(unpool_3)
+
+ batch_normalization_11 (BatchN  (None, 56, 56, 256)  1024       ['conv2d_11[0][0]']                conv_20 = BatchNormalization()(conv_20)
+ ormalization)
+
+ activation_11 (Activation)     (None, 56, 56, 256)  0           ['batch_normalization_11[0][0]']   conv_20 = Activation("relu")(conv_20)
+
+ conv2d_12 (Conv2D)             (None, 56, 56, 128)  295040      ['activation_11[0][0]']            conv_21 = Convolution2D(128, (kernel, kernel), padding="same")(conv_20)
+
+ batch_normalization_12 (BatchN  (None, 56, 56, 128)  512        ['conv2d_12[0][0]']                conv_21 = BatchNormalization()(conv_21)
+ ormalization)
+
+ activation_12 (Activation)     (None, 56, 56, 128)  0           ['batch_normalization_12[0][0]']   conv_21 = Activation("relu")(conv_21)
+
+ max_unpooling2d_3 (MaxUnpoolin  (None, 112, 112, 12  0          ['activation_12[0][0]',            unpool_4 = MaxUnpooling2D(pool_size)([conv_21, mask_2])
+ g2D)                           8)                                'max_pooling_with_argmax2d_1[0][
+                                                                 1]']
+
+ conv2d_13 (Conv2D)             (None, 112, 112, 12  147584      ['max_unpooling2d_3[0][0]']        conv_23 = Convolution2D(128, (kernel, kernel), padding="same")(unpool_4)
+                                8)
+
+ batch_normalization_13 (BatchN  (None, 112, 112, 12  512        ['conv2d_13[0][0]']                conv_23 = BatchNormalization()(conv_23)
+ ormalization)                  8)
+
+ activation_13 (Activation)     (None, 112, 112, 12  0           ['batch_normalization_13[0][0]']   conv_23 = Activation("relu")(conv_23)
+                                8)
+
+ conv2d_14 (Conv2D)             (None, 112, 112, 64  73792       ['activation_13[0][0]']            conv_24 = Convolution2D(64, (kernel, kernel), padding="same")(conv_23)
+                                )
+
+ batch_normalization_14 (BatchN  (None, 112, 112, 64  256        ['conv2d_14[0][0]']                conv_24 = BatchNormalization()(conv_24)
+ ormalization)                  )
+
+ activation_14 (Activation)     (None, 112, 112, 64  0           ['batch_normalization_14[0][0]']   conv_24 = Activation("relu")(conv_24)
+                                )
+
+ max_unpooling2d_4 (MaxUnpoolin  (None, 224, 224, 64  0          ['activation_14[0][0]',            unpool_5 = MaxUnpooling2D(pool_size)([conv_24, mask_1])
+ g2D)                           )                                 'max_pooling_with_argmax2d[0][1]
+                                                                 ']
+
+ conv2d_15 (Conv2D)             (None, 224, 224, 64  36928       ['max_unpooling2d_4[0][0]']        conv_25 = Convolution2D(64, (kernel, kernel), padding="same")(unpool_5)
+                                )
+
+ batch_normalization_15 (BatchN  (None, 224, 224, 64  256        ['conv2d_15[0][0]']                conv_25 = BatchNormalization()(conv_25)
+ ormalization)                  )
+
+ activation_15 (Activation)     (None, 224, 224, 64  0           ['batch_normalization_15[0][0]']   conv_25 = Activation("relu")(conv_25)
+                                )
+
+ conv2d_16 (Conv2D)             (None, 224, 224, 5)  325         ['activation_15[0][0]']            conv_26 = Convolution2D(n_labels, (1, 1), padding="valid")(conv_25)
+
+ batch_normalization_16 (BatchN  (None, 224, 224, 5)  20         ['conv2d_16[0][0]']                conv_26 = BatchNormalization()(conv_26)
+ ormalization)
+
+ reshape (Reshape)              (None, 50176, 5)     0           ['batch_normalization_16[0][0]']   conv_26 = Reshape(
+                                                                                                        (input_shape[0] * input_shape[1], n_labels),
+                                                                                                        input_shape=(input_shape[0], input_shape[1], n_labels),
+                                                                                                    )(conv_26)
+
+ activation_16 (Activation)     (None, 50176, 5)     0           ['reshape[0][0]']                  outputs = Activation(output_mode)(conv_26)
+
+==================================================================================================
+Total params: 11,744,025
+Trainable params: 11,736,335
+Non-trainable params: 7,690
+__________________________________________________________________________________________________
+None
+tf.__version__ is 2.11.0
+tf.keras.__version__ is: 2.11.0
