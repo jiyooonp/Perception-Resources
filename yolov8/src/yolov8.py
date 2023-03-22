@@ -6,13 +6,13 @@ import numpy as np
 import os
 
 ultralytics.checks()
+
 # Basic Parameters
 model = YOLO("../weights/best.pt")
 path = '/home/jy/PycharmProjects/Perception-Resources/dataset/testbed'
 
 classes = ["pepper"]
 COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
-
 
 def main_yay(path):
     print("in main yay")
@@ -41,21 +41,22 @@ def predict_pepper(img_path, show_result: bool = True, print_result: bool = Fals
 
     for result in results:
         boxes = result.boxes  # Boxes object for bbox outputs
-        # print("box",boxes)
-        # masks = result.masks  # Masks object for segmenation masks outputs
-        probs = result.probs  # Class probabilities for classification outputs
-        # print("prob",probs)
-        boxes_list.append(boxes)
-        # masks_list.append(masks)
-        probs_list.append(probs)
+
+        for box in boxes:
+            for one_box in box:
+                temp = one_box.xywh
+                # probs = one_box.probs  # Class probabilities for classification outputs
+                boxes_list.append(temp)
+                # probs_list.append(probs)
 
     # if show_result:
     #     for result in results:
     #         res_plotted = result[0].plot()
     #         cv2.imshow("result", res_plotted)
+
     if print_result:
         for result in results:
-            print_result_boxes(result)
+            print_result_boxes(boxes_list)
     return boxes_list, masks_list, probs_list
 def read_image(img_path):
     img = cv2.imread(img_path)
@@ -78,14 +79,11 @@ def predict_peppers(imgs_path: list, show_result: bool = False, print_result: bo
         all_probs_list.append(probs_list)
 
     return all_boxes_list, all_masks_list, all_probs_list
-def print_result_boxes(result):
-    boxes = result.boxes  # Boxes object for bbox outputs
-    print("box", boxes)
-    for box in boxes:
-        print(f"detected {[box.cls]}")
-        x, y, w, h = box.xywh
+def print_result_boxes(boxes_list):
+    print(f"detected {len(boxes_list)} peppers!")
 
-        print("xywh:", x, y, w, h)
+    for box in boxes_list:
+        print(f"detected {[box]}")
         # draw_bounding_box(result.orig_img, box.cls, box.conf, x, y, x + w, y - h)
 def draw_bounding_box(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
     label = str(classes[class_id])
@@ -143,12 +141,12 @@ def webcam_prediction():
     cam.destoryAllWindows()
 
 if __name__ == '__main__':
-    # main_yay(path)
-    model = YOLO("../weights/best.pt")
-    img_path = all_images_in_folder(path)[0]
-    inputs = read_image(img_path)
-    results = model(inputs)
-
-    boxes = results[0].boxes
-    box = boxes[0]  # returns one box
-    print(box.xyxy)
+    main_yay(path)
+    # model = YOLO("../weights/best.pt")
+    # img_path = all_images_in_folder(path)[0]
+    # inputs = read_image(img_path)
+    # results = model(inputs)
+    #
+    # boxes = results[0].boxes
+    # box = boxes[0]  # returns one box
+    # print(box.xyxy)
