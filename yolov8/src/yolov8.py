@@ -44,7 +44,7 @@ def predict_pepper(img_path, show_result: bool = True, print_result: bool = Fals
 
         for box in boxes:
             for one_box in box:
-                temp = one_box.xywh
+                temp = one_box._xywh
                 # probs = one_box.probs  # Class probabilities for classification outputs
                 boxes_list.append(temp)
                 # probs_list.append(probs)
@@ -130,8 +130,8 @@ def webcam_prediction():
                 image = result.orig_img
                 for box in boxes:
                     print(f"detected {[box.cls]}")
-                    x, y, w, h = box.xywh
-                    draw_bounding_box(image, box.cls, box.conf, x, y, x + w, y - h)
+                    x, y, w, h = box._xywh
+                    draw_bounding_box(image, box.cls, box._conf, x, y, x + w, y - h)
         else:
             print(f"detected nothing")
             cv2.putText(image, "nothing found", (100, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
