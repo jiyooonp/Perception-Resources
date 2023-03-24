@@ -1,11 +1,9 @@
 import random
-
+import torch
 import cv2
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from PIL import Image
-from ultralytics import YOLO
-import ultralytics
 import numpy as np
 import os
 from shapely import Polygon
@@ -46,10 +44,10 @@ def draw_bounding_box(confidence, x, y, w, h):
     ax.add_patch(rect)
 
     # plot the centroid of pepper
-    plt.plot(x, y, 'b*')
+    # plt.plot(x, y, 'b*')
 
     # plot conf
-    plt.text(x - w / 2, y - h / 2, confidence, color='red', fontsize=10)
+    plt.text(x - w / 2, y - h / 2, round(float(confidence[0]), 2), color='red', fontsize=10) #round(confidence[0], 2)
 def draw_bounding_polygon(confidence,mask, img_shape):
     """
     Draw the bounding polygons associated with a peduncle.
@@ -61,19 +59,19 @@ def draw_bounding_polygon(confidence,mask, img_shape):
     # print("mask: ", len(mask[0]), len(mask[0][0]))
     # print("mask: ", mask)
 
-    polygon = Polygon(mask[0])
+    mask = torch.transpose(mask, 0, 1)
+    polygon = Polygon(mask.T)
     x, y = polygon.exterior.xy
-    print('img_shape: ', img_shape)
+    # print('img_shape: ', img_shape)
     x_scaled = [i * img_shape[1] for i in x]
     y_scaled = [i * img_shape[0] for i in y]
-    print('x, y: ', x, y)
+    # print('x, y: ', x, y)
 
-    plt.plot(x_scaled, y_scaled)
+    plt.fill(x_scaled, y_scaled, color='red', alpha=0.5)
     # plt.plot(*polygon.exterior.xy)
     # p = gpd.GeoSeries(polygon)
     # p.plot()
 
-    plt.plot(100, 100, 'b*')
 
 def put_title(detected_frame):
     # displaying the title
@@ -87,6 +85,7 @@ def draw_peppers(detected_frame):
 
     put_title(detected_frame)
     for pepper in detected_frame.pepper_fruit_detections:
+        print('drawing one pepper')
 
         xywh = pepper.xywh
         x = int(xywh[0])
@@ -95,7 +94,7 @@ def draw_peppers(detected_frame):
         h = int(xywh[3])
         draw_bounding_box( pepper.conf, x, y, w, h)
 
-    plt.savefig(f"results_2/{img_name}_fruit_result.png")
+    plt.savefig(f"results_3/{img_name}_fruit_result.png")
     plt.clf()
     plt.cla()
 def draw_peduncles(detected_frame):
@@ -113,15 +112,31 @@ def draw_peduncles(detected_frame):
 def print_pepperdetection(pd):
     output = "\n============================================\n"
     output += f"PepperDetection Results:\n"
-    output += f"folder_path={pd.path}\n# of detected_images: {len(pd.detected_frames)}\n"
+    output += f"folder_path={pd._path}\n# of detected_images: {len(pd.detected_frames)}\n"
     for detected_img in pd.detected_frames:
         output += f"\t{detected_img.img_path.split('/')[-1]}\n"
         output += f"\t\tDetected {detected_img.pepper_fruit_count} peppers\n"
         for pepper in detected_img.pepper_fruit_detections:
             output += f"\t\t\t{pepper}\n"
         output += f"\t\tDetected {detected_img.pepper_peduncle_count} peduncles\n"
-        for peduncle in detected_img.pepper_peduncle_detections:
-            output += f"\t\t\t{peduncle}\n"
+        # for peduncle in detected_img.pepper_peduncle_detections:
+            # output += f"\t\t\t{peduncle}\n"
     output += "============================================\n"
     return output
 
+def get_image_from_webcam():
+    camera = cv2.VideoCapture(0)
+    while True:
+        return_value,image = camera.read()
+        # gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+        image = cv2.flip(image, 1) # <class 'numpy.ndarray'>
+        cv2.imshow('image',image)
+
+        if cv2.waitKey(1)& 0xFF == ord('s'):
+            cv2.imwrite('test.jpg',image)
+            break
+    camera.release()
+    cv2.destroyAllWindows()
+    return image
+if __name__ == '__main__':
+    get_image_from_webcam()

@@ -1,11 +1,14 @@
+from typing import List, Optional
 class PepperFruit:
-    def __init__(self, number:int, order = None, x=None, y=None, w=None, h=None, conf=None):
-        self.number = number
+    def __init__(self, number:int, order = -1, xywh=None, conf=0.0):
+        self._number: int = number
 
-        self._xywh = list()
-        self._conf = conf
-        self._order = order
-
+        self._xywh: Optional[List[float]] = xywh
+        self._order: int = order
+        self._conf: float = conf
+    @property
+    def number(self):
+        return self._number
     @property
     def xywh(self):
         return self._xywh

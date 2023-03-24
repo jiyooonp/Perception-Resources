@@ -1,13 +1,17 @@
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Tuple, List
 
 import cv2
 import torch
 from torch.utils.data import DataLoader
 from ultralytics import YOLO
 import ultralytics
-from detected_frame import DetectedFrame
-from pepper_peduncle import PepperPeduncle
-from pepper_utils import *
+# from detected_frame import DetectedFrame
+# from pepper_peduncle import PepperPeduncle
+# from pepper_utils import *
+
+from yolov8_scripts.src.detected_frame import DetectedFrame
+from yolov8_scripts.src.pepper_peduncle import PepperPeduncle
+from yolov8_scripts.src.pepper_utils import *
 
 
 # class PepperPeduncleBatch:
@@ -42,44 +46,58 @@ from pepper_utils import *
 
 class PepperPeduncleDetector:
     def __init__(self, file_path, yolo_weight_path):
+
         ultralytics.checks()
 
-        # Basic Parameters
-        self.model = YOLO(yolo_weight_path)
-        self.path = file_path
-        self.classes = ["pepper_peduncle"]
-        self.imgs_path = list()
-        self.detected_frames = list()
+        self._model: YOLO = YOLO(yolo_weight_path)
+        self._path: str = file_path
+        self._classes: List[str] = ["pepper"]
+
+        self._imgs_path: List[str] = list()
+        self._detected_frames: List[DetectedFrame] = list()
+    @property
+    def detected_frames(self):
+        return self._detected_frames
+    @detected_frames.setter
+    def detected_frames(self, detected_frames):
+        self._detected_frames = detected_frames
+    @property
+    def path(self):
+        return self._path
     def __str__(self):
         return print_pepperdetection(self)
-    def run_detection(self):
+    def run_detection(self, show_result: bool = False, print_result: bool = False):
         print("Starting detection")
-        self.imgs_path = get_all_image_path_in_folder(self.path)
-        self.predict_peduncles(show_result=False, print_result=False)
+        self._imgs_path = get_all_image_path_in_folder(self._path)
+        self.predict_peduncles(show_result, print_result)
 
     def predict_peduncle(self, img_path, show_result: bool = False, print_result: bool = False):
         detected_frame = DetectedFrame(img_path)
         print("Detecting image: ", img_path)
 
         img = read_image(img_path)
-        results = self.model(img)
+        results = self._model(img)
         peduncle_count = 0
 
-        for result in results:
-            mask = result.masks  # Boxes object for bbox outputs
+        result = results[0]
+
+        for i in range(result.masks.shape[0]):
+            mask = result.masks # Boxes object for bbox outputs
+            box = result.boxes
 
             peduncle = PepperPeduncle(peduncle_count)
 
-            segment = mask.segments
-            peduncle.mask = segment
+            peduncle.mask = torch.Tensor(mask.segments[i])
+            peduncle.conf = box.conf[i]
+
             detected_frame.img_shape = img.shape
             detected_frame.add_detected_pepper_peduncle(peduncle)
             peduncle_count += 1
-
+        detected_frame.mask = result.masks.masks
         if show_result:
             for result in results:
                 res_plotted = result[0].plot()
-                cv2.imshow("result", res_plotted)
+                # cv2.imshow("result", res_plotted)
 
         if print_result:
             print_result_masks(detected_frame)
@@ -87,9 +105,9 @@ class PepperPeduncleDetector:
         return detected_frame
     def predict_peduncles(self, show_result: bool = False, print_result: bool = False):
 
-        for img_path in self.imgs_path:
+        for img_path in self._imgs_path:
             detected_frame = self.predict_peduncle(img_path, show_result, print_result)
-            self.detected_frames.append(detected_frame)
+            self._detected_frames.append(detected_frame)
     def plot_results(self):
         print("Plotting results")
         for detected_img in self.detected_frames:

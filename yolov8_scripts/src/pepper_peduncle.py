@@ -1,8 +1,8 @@
 class PepperPeduncle:
     def __init__(self, number:int, mask = None, conf=None):
-        self.number = number
+        self.number: int = number
         self._mask = mask
-        self._conf = conf
+        self._conf: float = conf
 
     @property
     def mask(self):
