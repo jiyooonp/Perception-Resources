@@ -7,6 +7,9 @@ from scipy.integrate import quad
 from skimage.measure import label
 from scipy.optimize import curve_fit
 from skimage.morphology import closing, medial_axis
+
+from yolov8_scripts.src.pepper_fruit_detector import PepperFruitDetector
+from yolov8_scripts.src.pepper_utils import *
 # input: image
 class Perception:
     def __init__(self, source, fps, threshold=0.5, save=True):
@@ -20,8 +23,10 @@ class Perception:
         # get image from source
         # output: RGBD information
         #################################################################
-        self.image = None
-        pass
+        if self.source == "webcam":
+            self.image = get_image_from_webcam()
+        else:
+            self.image = read_image(self.source)
     def get_depth(self, image, x, y):
         #################################################################
         # given an image and x, y coordinates, return the depth information
@@ -47,13 +52,17 @@ class Perception:
     #####################################################################
     def detect_peppers_one_frame(self, thresh):
         #################################################################
-        # use yolov8 and get the pepper locations
+        # use yolov8_scripts and get the pepper locations
         # input:
         #   thresh: disgard detection lower than threshold
         # output:
         #   locations: all the locations of the pepper boxes [conf, x, y] (N, 3)
         #################################################################
-        pass
+        PepperDetection = PepperFruitDetector(
+            file_path='/home/jy/PycharmProjects/Perception-Resources/dataset/testbed_video_to_img',
+            yolo_weight_path="/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/weights/pepper_fruit_best.pt")
+        PepperDetection.run_detection(show_result=False)
+        return PepperDetection.detected_frames[0].pepper_fruit_detections
     def detect_peppers_time_frame(self, thresh, frames):
         #################################################################
         # stack pepper locations over a timeframe time
@@ -63,10 +72,13 @@ class Perception:
         #   locations: all the locations of the pepper boxes over a
         #       number of frames F x [conf, x, y] (F, N, 3)
         #################################################################
-        pass
+        for i in range(frames):
+            pepper_fruit_detection = self.detect_peppers_one_frame(thresh)
+            self.pepper_locations.append(pepper_fruit_detection)
+        print(self.pepper_locations)
     def clear_false_positives(self):
         #################################################################
-        # algorithm to tak in a series of bounding boxes and output
+        # algorithm to take in a series of bounding boxes and output
         # true positive pepper locations
         # input:
         #   locations : pepper locations over F frames (F, N, 3)
