@@ -3,6 +3,7 @@ class PepperPeduncle:
         self.number: int = number
         self._mask = mask
         self._conf: float = conf
+        self._xywh = None
 
     @property
     def mask(self):
@@ -18,6 +19,12 @@ class PepperPeduncle:
     @conf.setter
     def conf(self, conf):
         self._conf = conf
+    @property
+    def xywh(self):
+        return self._xywh
+    @xywh.setter
+    def xywh(self, value):
+        self._xywh = value
 
     def __str__(self):
         return f"Peduncle(number={self.number},mask={self._mask}, conf={self._conf})"
