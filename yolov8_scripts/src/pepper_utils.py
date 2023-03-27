@@ -1,6 +1,6 @@
 import collections
 import random
-from typing import List
+from typing import List, Dict
 
 import torch
 import cv2
@@ -15,6 +15,8 @@ from yolov8_scripts.src.pepper_fruit import PepperFruit
 from yolov8_scripts.src.pepper_peduncle import PepperPeduncle
 # from yolov8_scripts.src.detected_frame import OneFrame
 import math
+# from figures import BLUE, GRAY, RED, set_limits
+from shapely.plotting import plot_polygon, plot_points
 
 def get_img_size(img_path):
     img = read_image(img_path)
@@ -23,11 +25,11 @@ def get_all_image_path_in_folder(path):
     img_list = list()
     for dirs, subdir, files in os.walk(path):
         for file_name in files:
-            if file_name.endswith(".jpeg") or file_name.endswith(".jpg"):
+            if file_name.endswith(".jpeg") or file_name.endswith(".jpg") or file_name.endswith(".png"):
                 rgb_file = dirs + os.sep + file_name
                 img_list.append(rgb_file)
     # print("all images in folder: ", img_list)
-    return img_list
+    return img_list[:10]
 def read_image(img_path):
     img = cv2.imread(img_path)
     img = np.asarray(img)
@@ -42,7 +44,7 @@ def print_result_masks(detected_img):
     for peduncle in detected_img.pepper_peduncle_detections:
         print(peduncle)
         # draw_bounding_box(result.orig_img, box.cls, box.conf, x, y, x + w, y - h)
-def draw_bounding_box(confidence, x, y, w, h, color):
+def draw_bounding_box(confidence, x, y, w, h, color, fill=False):
     # Get the current reference
     ax = plt.gca()
 
@@ -57,7 +59,7 @@ def draw_bounding_box(confidence, x, y, w, h, color):
 
     # plot conf
     plt.text(x - w / 2, y - h / 2, round(float(confidence[0]), 2), color='red', fontsize=10) #round(confidence[0], 2)
-def draw_bounding_polygon(confidence,mask, img_shape, color):
+def draw_bounding_polygon(confidence,mask, img_shape, color, fill=True):
     """
     Draw the bounding polygons associated with a peduncle.
     :param confidence: Confidence score associated with a mask.
@@ -75,9 +77,11 @@ def draw_bounding_polygon(confidence,mask, img_shape, color):
     x_scaled = [i * img_shape[1] for i in x]
     y_scaled = [i * img_shape[0] for i in y]
     # print('x, y: ', x, y)
-
-    plt.fill(x_scaled, y_scaled, color=color, alpha=0.7)
-    # plt.plot(*polygon.exterior.xy)
+    if fill:
+        plt.fill(x_scaled, y_scaled, color=color, alpha=0.7)
+    else:
+        plt.fill(x_scaled, y_scaled, color=color, alpha=1)
+    plt.plot(*polygon.exterior.xy)
     # p = gpd.GeoSeries(polygon)
     # p.plot()
 
@@ -87,13 +91,28 @@ def put_title(detected_frame):
     plt.title(label=f"Pepper: {len(detected_frame.pepper_fruit_detections)} Peduncle: {len(detected_frame.pepper_peduncle_detections)}",
               fontsize=10,
               color="black")
-def draw_pepper(detected_frame):
-    img = np.asarray(Image.open(detected_frame.img_path))
-    img_name = detected_frame.img_path.split('/')[-1].split('.')[0]
+def draw_pepper(one_frame):
+    img = np.asarray(Image.open(one_frame.img_path))
+    img_name = one_frame.img_path.split('/')[-1].split('.')[0]
     plt.imshow(img)
 
-    put_title(detected_frame)
-    for idx, pepper in detected_frame.pepper_detections.items():
+    put_title(one_frame)
+    for peduncle in one_frame.pepper_peduncle_detections.values():
+        mask = peduncle.mask
+        draw_bounding_polygon(peduncle.conf, mask, one_frame.img_shape, color='black', fill=False)
+        # plt.plot(peduncle.xywh[0], peduncle.xywh[1], '*')
+        # plt.text(peduncle.xywh[0], peduncle.xywh[1], f'({peduncle.xywh[0], peduncle.xywh[1]})')
+    for pepper_fruit in one_frame.pepper_fruit_detections.values():
+        xywh = pepper_fruit.xywh
+        # plt.plot(pepper_fruit.xywh[0], pepper_fruit.xywh[1], '*')
+        # plt.text(pepper_fruit.xywh[0], pepper_fruit.xywh[1], f'({pepper_fruit.xywh[0], pepper_fruit.xywh[1]})', color="blue")
+        x = int(xywh[0])
+        y = int(xywh[1])
+        w = int(xywh[2])
+        h = int(xywh[3])
+        draw_bounding_box(pepper_fruit.conf, x, y, w, h, color="black",fill=False)
+
+    for idx, pepper in one_frame.pepper_detections.items():
         r = np.round(np.random.rand(), 1)
         g = np.round(np.random.rand(), 1)
         b = np.round(np.random.rand(), 1)
@@ -109,9 +128,10 @@ def draw_pepper(detected_frame):
         draw_bounding_box(pepper_fruit.conf, x, y, w, h, color=color)
 
         mask = pepper_peduncle.mask
-        draw_bounding_polygon(pepper_peduncle.conf,mask, detected_frame.img_shape, color=color)
-
-    plt.savefig(f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_3/{img_name}_pepper_result.png")
+        draw_bounding_polygon(pepper_peduncle.conf, mask, one_frame.img_shape, color=color)
+    # plt.axis('off')
+    plt.savefig(f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_4/{img_name}_pepper_result.png",
+                bbox_inches='tight', pad_inches = 1)
     # / home / jy / PycharmProjects / Perception - Resources / yolov8_scripts / src / results_3 / IMG_0971__1_fruit_result.png
     plt.clf()
     plt.cla()
@@ -187,17 +207,29 @@ def get_image_from_webcam():
 #             pepper_fruit_peduncle_distances.append(distance_between_pepper_fruit_peduncle(pepper_fruit, pepper_peduncle))
 #     pepper_fruit_peduncle_match = remove_duplicate_peduncles(pepper_fruit_peduncle_distances)
 #     return pepper_fruit_peduncle_match
-def match_pepper_fruit_peduncle(pepper_fruit_detections: List[PepperFruit],pepper_peduncle_detections: List[PepperPeduncle]):
+
+def is_above(pepper_fruit:PepperFruit, pepper_peduncle:PepperPeduncle):
+    # print(pepper_fruit.xywh[1], pepper_peduncle.xywh[1])
+    return pepper_fruit.xywh[1]>=pepper_peduncle.xywh[1]
+def match_pepper_fruit_peduncle(pepper_fruit_detections: Dict[int, PepperFruit],pepper_peduncle_detections: Dict[int, PepperPeduncle]):
 
     pepper_fruit_peduncle_distances = []
-    for pepper_fruit in pepper_fruit_detections:
+    for pepper_fruit in pepper_fruit_detections.values():
         min_dist = math.inf
-        pecuncle_match = None
-        for pepper_peduncle in pepper_peduncle_detections:
+        peduncle_match = None
+        for pepper_peduncle in pepper_peduncle_detections.values():
             dist = distance_between_pepper_fruit_peduncle(pepper_fruit, pepper_peduncle)
-            if dist<min_dist:
+            x, y, w, h = pepper_fruit.xywh
+            box1 = [[x-w/2 , y-h/2], [x+w/2 , y-h/2], [x+w/2 , y+h/2], [x-w/2 , y+h/2]]
+            x, y, w, h = pepper_peduncle.xywh
+            box2 = [[x-w/2 , y-h/2], [x+w/2 , y-h/2], [x+w/2 , y+h/2], [x-w/2 , y+h/2]]
+            iou = calculate_iou(box1, box2)
+            print("iou", iou)
+            if dist<min_dist and is_above(pepper_fruit, pepper_peduncle) and iou>0:
                 peduncle_match = pepper_peduncle
                 min_dist = dist
+        if not peduncle_match:
+            peduncle_match = PepperPeduncle(-1)
         pepper_fruit_peduncle_distances.append(((pepper_fruit.number, peduncle_match.number), min_dist))
 
     pepper_fruit_peduncle_match = remove_duplicate_peduncles(pepper_fruit_peduncle_distances)
@@ -262,5 +294,73 @@ def distance_between_pepper_fruit_peduncle(pepper_fruit: PepperFruit, pepper_ped
     # return ((pepper_fruit_number, pepper_peduncle_number),distance)
     return distance
 
+def red_to_green(img):
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    red_lo = np.array([50, 0, 0])
+    red_hi = np.array([255, 255, 255])
+    # Mask image to only select browns
+    mask = cv2.inRange(hsv, red_lo, red_hi)
+    cv2.imwrite("mask.jpg", mask)
+    # img[mask > 0] = img[mask > 0] * [0.3, 0, 0] + [0, 130, 0]
+    img[mask > 0] = 0
+    return img
+
+def red_to_green_2(img):
+    b, g, r = cv2.split(img)  # get b,g,r
+    rgb_img = cv2.merge([r, g, b])
+    # plt.imshow(rgb_img)
+
+    x, y, z = np.shape(img)
+    red = np.zeros((x, y, z), dtype=int)
+    green = np.zeros((x, y, z), dtype=int)
+    blue = np.zeros((x, y, z), dtype=int)
+    for i in range(0, x):
+        for j in range(0, y):
+            red[i][j][0] = rgb_img[i][j][0]
+            green[i][j][1] = rgb_img[i][j][1]
+            blue[i][j][2] = rgb_img[i][j][2]
+    # plt.imshow(red)
+    # # plt.show()
+    # plt.imshow(green)
+    # # plt.show()
+    # plt.imshow(blue)
+    # plt.show()
+
+    retrack_original = np.zeros((x, y, z), dtype=int)
+    for i in range(0, x):
+        for j in range(0, y):
+            retrack_original[i][j][0] = red[i][j][0]*0.2//1
+            retrack_original[i][j][1] = green[i][j][1]
+            retrack_original[i][j][2] = blue[i][j][2]
+    # cv2.imwrite('ori.jpg', retrack_original)
+    plt.imshow(retrack_original)
+    plt.show()
+    return retrack_original
+def calculate_iou(box_1, box_2):
+    '''
+
+    :param box_1: 4 x 2 tl, tr, br, bl
+    :param box_2:
+    :return: iou from 0-1
+    '''
+    # fig = plt.figure(1, dpi=90)
+    poly_1 = Polygon(box_1)
+    poly_2 = Polygon(box_2)
+
+    # plot_polygon(poly_1, add_points=False, color='red')
+    # plot_polygon(poly_2, add_points=False, color='blue')
+    # plt.savefig(f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_5/{int(np.random.rand()*100)}.png")
+    # plt.clf()
+    # plt.cla()
+
+    iou = poly_1.intersection(poly_2).area/poly_1.union(poly_2).area
+    return iou
+
 if __name__ == '__main__':
-    get_image_from_webcam()
+    # get_image_from_webcam()
+    # image = cv2.imread("/home/jy/PycharmProjects/Perception-Resources/dataset/colorful/bell-peppers-do-the-different-colors-really-taste-any-different.jpg")
+    image = cv2.imread("/home/jy/PycharmProjects/Perception-Resources/dataset/colorful/bell-peppers-in-season.jpg")
+    # cv2.imwrite("img1.jpg", image)
+    # image = red_to_green(image)
+    # cv2.imwrite("img2.jpg", image)
+    red_to_green_2(image)

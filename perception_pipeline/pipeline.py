@@ -8,7 +8,7 @@ from skimage.measure import label
 from scipy.optimize import curve_fit
 from skimage.morphology import closing, medial_axis
 
-from yolov8_scripts.src.detected_frame import OneFrame
+from yolov8_scripts.src.one_frame import OneFrame
 from yolov8_scripts.src.pepper_fruit_detector import PepperFruitDetector
 from yolov8_scripts.src.pepper_peduncle_detector import PepperPeduncleDetector
 from yolov8_scripts.src.pepper_utils import *

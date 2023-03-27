@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from ultralytics import YOLO
 import ultralytics
 from yolov8_scripts.src.pepper_fruit import PepperFruit
-from yolov8_scripts.src.pepper_utils import print_pepperdetection, get_all_image_path_in_folder,read_image, draw_pepper_fruits
+from yolov8_scripts.src.pepper_utils import print_pepperdetection, get_all_image_path_in_folder,read_image, draw_pepper_fruits, red_to_green_2
 from typing import List
 
 class PepperFruitDetector:
@@ -26,20 +26,21 @@ class PepperFruitDetector:
     def __str__(self):
         return print_pepperdetection(self)
 
-    def run_detection(self, img_path, show_result: bool = False, print_result: bool = False):
+    def run_detection(self, img_path, show_result: bool = False, print_result: bool = False, thresh = 0.25):
         print("Starting detection")
         self._imgs_path = get_all_image_path_in_folder(self._path)
         # self.predict_peppers(show_result, print_result)
-        return self.predict_pepper(img_path, show_result, print_result)
+        return self.predict_pepper(img_path, show_result, print_result, thresh=thresh)
 
 
-    def predict_pepper(self, img_path, show_result: bool = False, print_result: bool = False):
+    def predict_pepper(self, img_path, show_result: bool = False, print_result: bool = False, thresh=0.25):
         # detected_frame = OneFrame(img_path)
-        pepper_list = list()
+        pepper_list = dict()
         print("Detecting image: ", img_path)
 
         img = read_image(img_path)
-        results = self._model(img)
+        img = red_to_green_2(img).astype('float32')
+        results = self._model(img, conf=thresh)
         pepper_count = 0
 
         for result in results:
@@ -52,7 +53,7 @@ class PepperFruitDetector:
                 pepper.xywh = xywh[0].cpu().numpy()
                 pepper.conf = conf
                 # detected_frame.add_detected_pepper_fruit(pepper)
-                pepper_list.append(pepper)
+                pepper_list[pepper_count] = pepper
                 pepper_count += 1
 
         # UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure. plt.show()

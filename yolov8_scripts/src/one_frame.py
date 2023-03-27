@@ -22,9 +22,9 @@ class OneFrame:
         self._pepper_fruit_count: int = 0
         self._pepper_peduncle_count: int = 0
 
-        self._pepper_fruit_detections: Dict[PepperFruit] = dict()
-        self._pepper_peduncle_detections: Dict[PepperPeduncle] = dict()
-        self._pepper_detections: Dict[Pepper] = dict()
+        self._pepper_fruit_detections: Dict[int, PepperFruit] = dict()
+        self._pepper_peduncle_detections: Dict[int. PepperPeduncle] = dict()
+        self._pepper_detections: Dict[int, Pepper] = dict()
 
         self._pepper_fruit_detector: PepperFruitDetector = PepperFruitDetector(img_path,
            yolo_weight_path = '/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/weights/pepper_fruit_best.pt')
@@ -65,14 +65,17 @@ class OneFrame:
         self._pepper_peduncle_detections[peduncle.number] = peduncle
         self._pepper_peduncle_count += 1
     def match_peppers(self):
-        pepper_fruit_peduncle_match = match_pepper_fruit_peduncle(self._pepper_fruit_detections, self._pepper_peduncle_detections)
+        pepper_fruit_peduncle_match= match_pepper_fruit_peduncle(self._pepper_fruit_detections, self._pepper_peduncle_detections)
         number = 0
         for (pfn, ppn), _ in pepper_fruit_peduncle_match:
-            pepper = Pepper(number, pfn, ppn)
-            pepper.pepper_fruit = self._pepper_fruit_detections[pfn]
-            pepper.pepper_peduncle = self.pepper_peduncle_detections[ppn]
-            self._pepper_detections[number] = pepper
-            number += 1
+            if ppn == -1:
+                continue
+            else:
+                pepper = Pepper(number, pfn, ppn)
+                pepper.pepper_fruit = self._pepper_fruit_detections[pfn]
+                pepper.pepper_peduncle = self.pepper_peduncle_detections[ppn]
+                self._pepper_detections[number] = pepper
+                number += 1
     def plot_pepper_fruit(self):
         draw_pepper_fruits(self)
     def plot_pepper_peduncle(self):
@@ -80,8 +83,8 @@ class OneFrame:
     def plot_pepper(self):
         draw_pepper(self)
     def run(self):
-        self._pepper_fruit_detections = self._pepper_fruit_detector.run_detection(self.img_path, show_result=False)
-        self._pepper_peduncle_detections = self._pepper_peduncle_detector.run_detection(self.img_path, show_result=False)
+        self._pepper_fruit_detections = self._pepper_fruit_detector.run_detection(self.img_path, thresh=0.3, show_result=False)
+        self._pepper_peduncle_detections = self._pepper_peduncle_detector.run_detection(self.img_path,thresh=0.3, show_result=False)
         print(self._pepper_peduncle_detections)
         self.match_peppers()
         self.plot_pepper()
