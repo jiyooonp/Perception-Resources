@@ -9,6 +9,7 @@ from scipy.optimize import curve_fit
 from skimage.morphology import closing, medial_axis
 
 from yolov8_scripts.src.pepper_fruit_detector import PepperFruitDetector
+from yolov8_scripts.src.pepper_peduncle_detector import PepperPeduncleDetector
 from yolov8_scripts.src.pepper_utils import *
 # input: image
 class Perception:
@@ -18,6 +19,9 @@ class Perception:
         self.fps = fps
         self.save = save
         self.threshold = threshold
+        self.pepper_fruits = dict()
+        self.pepper_peduncles = dict()
+        self.pepper = dict()
     def get_image(self):
         #################################################################
         # get image from source
@@ -63,6 +67,7 @@ class Perception:
             yolo_weight_path="/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/weights/pepper_fruit_best.pt")
         PepperDetection.run_detection(show_result=False)
         return PepperDetection.detected_frames[0].pepper_fruit_detections
+
     def detect_peppers_time_frame(self, thresh, frames):
         #################################################################
         # stack pepper locations over a timeframe time
@@ -74,8 +79,38 @@ class Perception:
         #################################################################
         for i in range(frames):
             pepper_fruit_detection = self.detect_peppers_one_frame(thresh)
-            self.pepper_locations.append(pepper_fruit_detection)
-        print(self.pepper_locations)
+            self.pepper_fruit.append(pepper_fruit_detection)
+        print(self.pepper_fruit)
+    def detect_peduncles_one_frame(self, thresh):
+        #################################################################
+        # use yolov8_scripts and get the peduncle locations
+        # input:
+        #   thresh: disgard detection lower than threshold
+        # output:
+        #   locations: all the locations of the peduncle segments [conf, x, y] (N, 3)
+        #################################################################
+        PepperPeduncleDetection = PepperPeduncleDetector(
+            file_path='/home/jy/PycharmProjects/Perception-Resources/dataset/peduncle',
+            yolo_weight_path="../weights/pepper_peduncle_best.pt")
+        PepperPeduncleDetection.run_detection()
+        print(PepperPeduncleDetection)
+        PepperPeduncleDetection.plot_results()
+    def detect_peduncles_time_frame(self, thresh, frames):
+        #################################################################
+        # stack peduncle locations over a timeframe time
+        # input:
+        #   frames: F number of frames to be stored in list
+        # output:
+        #   locations: all the locations of the peduncle segments over a
+        #       number of frames F x [conf, x, y] (F, N, 3)
+        #################################################################
+        for i in range(frames):
+            pepper_peduncle_detection = self.detect_peduncles_one_frame(thresh)
+            self.pepper_peduncles.append(pepper_peduncle_detection)
+        print(self.pepper_peduncles)
+
+    def get_pepper(self):
+        pass
     def clear_false_positives(self):
         #################################################################
         # algorithm to take in a series of bounding boxes and output

@@ -1,3 +1,4 @@
+import collections
 import random
 import torch
 import cv2
@@ -8,7 +9,10 @@ import numpy as np
 import os
 from shapely import Polygon
 import geopandas as gpd
-
+from yolov8_scripts.src.pepper_fruit import PepperFruit
+from yolov8_scripts.src.pepper_peduncle import PepperPeduncle
+from yolov8_scripts.src.detected_frame import DetectedFrame
+import math
 
 def get_all_image_path_in_folder(path):
     img_list = list()
@@ -138,5 +142,61 @@ def get_image_from_webcam():
     camera.release()
     cv2.destroyAllWindows()
     return image
+
+def match_pepper_fruit_peduncle(detected_frame: DetectedFrame):
+    pepper_fruit_detections = detected_frame.pepper_fruit_detections
+    pepper_peduncle_detections = detected_frame.pepper_peduncle_detections
+
+    pepper_fruit_peduncle_distances = []
+    for pepper_fruit in pepper_fruit_detections:
+        for pepper_peduncle in pepper_peduncle_detections:
+            pepper_fruit_peduncle_distances.append(distance_between_pepper_fruit_peduncle(pepper_fruit, pepper_peduncle))
+    pepper_fruit_peduncle_match = remove_duplicate_peduncles(pepper_fruit_peduncle_distances)
+    return pepper_fruit_peduncle_match
+def choose_unmatching(duplicate_list):
+    # ((pf_number, pp_number), distance)
+    pepper_delete = list()
+    for duplicates in duplicate_list:
+        duplicates = sorted(duplicates, key=lambda d: d[1])
+        pepper_delete.append(duplicates[1:])
+    return pepper_delete
+def remove_duplicate_peduncles(pepper_fruit_peduncle_distances: list):
+    # remove duplicate peduncles
+
+    detetected_pepper_fruit = []
+    detected_pepper_peduncle = []
+    clean_pepper_fruit_peduncle_distances = []
+
+    for pf, pp, d in pepper_fruit_peduncle_distances:
+        detetected_pepper_fruit.append(pf)
+        detected_pepper_peduncle.append(pp)
+    duplicate_pepper_fruit = [item for item, count in collections.Counter(detetected_pepper_fruit).items() if count > 1]
+    duplicate_pepper_peduncle = [item for item, count in collections.Counter(detected_pepper_peduncle).items() if count > 1]
+
+    pf_duplicate_list = list()
+    for pepper_fruit in duplicate_pepper_fruit:
+        duplicate_list = list()
+        for i in range(len(pepper_fruit_peduncle_distances)):
+            pf, pp, d = pepper_fruit_peduncle_distances[i]
+            if pf == pepper_fruit:
+                duplicate_list.append(pepper_fruit_peduncle_distances[i])
+        pf_duplicate_list.append(duplicate_list)
+    pepper_fruit_delete = choose_unmatching(pf_duplicate_list)
+    for d in pepper_fruit_peduncle_distances:
+        if d in pepper_fruit_delete:
+            pepper_fruit_peduncle_distances.remove(d)
+
+    return pepper_fruit_peduncle_distances
+
+def distance_between_pepper_fruit_peduncle(pepper_fruit: PepperFruit, pepper_peduncle: PepperPeduncle):
+    pepper_fruit_xywh = pepper_fruit.xywh
+    pepper_peduncle_xywh = pepper_peduncle.xywh
+
+    pepper_fruit_number = pepper_fruit.number
+    pepper_peduncle_number = pepper_peduncle.number
+
+    distance = math.dist(pepper_fruit_xywh[:2], pepper_peduncle_xywh[:2])
+    return ((pepper_fruit_number, pepper_peduncle_number),distance)
+
 if __name__ == '__main__':
     get_image_from_webcam()

@@ -1,6 +1,8 @@
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict
 from yolov8_scripts.src.pepper_fruit import PepperFruit
 from yolov8_scripts.src.pepper_peduncle import PepperPeduncle
+from yolov8_scripts.src.pepper import Pepper
+from yolov8_scripts.src.pepper_utils import *
 import torch
 class DetectedFrame:
     def __init__(self, img_path):
@@ -12,8 +14,9 @@ class DetectedFrame:
         self.detected_peduncle_fruit: bool = False
         self._pepper_fruit_count: int = 0
         self._pepper_peduncle_count: int = 0
-        self._pepper_fruit_detections: List[PepperFruit] = list()
-        self._pepper_peduncle_detections: List[PepperPeduncle] = list()
+        self._pepper_fruit_detections: Dict[PepperFruit] = dict()
+        self._pepper_peduncle_detections: Dict[PepperPeduncle] = dict()
+        self._pepper_detections: Dict[Pepper] = dict()
     @property
     def img_shape(self):
         return self._img_shape
@@ -38,12 +41,25 @@ class DetectedFrame:
     @property
     def pepper_peduncle_count(self):
         return self._pepper_peduncle_count
+    @property
+    def pepper_detections(self):
+        return self._pepper_detections
     def __str__(self):
         return f"DetectedFrame(frame={self.frame}, detections={self.detections})"
 
     def add_detected_pepper_fruit(self, pepper):
-        self._pepper_fruit_detections.append(pepper)
+        self._pepper_fruit_detections[pepper.number] = pepper
         self._pepper_fruit_count += 1
     def add_detected_pepper_peduncle(self, peduncle):
-        self._pepper_peduncle_detections.append(peduncle)
+        self._pepper_peduncle_detections[peduncle.number] = peduncle
         self._pepper_peduncle_count += 1
+    def match_peppers(self):
+        pepper_fruit_peduncle_match = match_pepper_fruit_peduncle(self._pepper_fruit_detections, self._pepper_peduncle_detections)
+        number = 0
+        for (pfn, ppn), _ in pepper_fruit_peduncle_match:
+            pepper = Pepper(number, pfn, ppn)
+            pepper.pepper_fruit = self._pepper_fruit_detections[pfn]
+            pepper.pepper_peduncle = self.pepper_peduncle_detections[ppn]
+            self._pepper_detections[number] = pepper
+            number += 1
+
