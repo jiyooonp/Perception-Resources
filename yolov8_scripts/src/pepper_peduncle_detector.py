@@ -50,20 +50,20 @@ class PepperPeduncleDetector:
         peduncle_count = 0
 
         result = results[0]
+        if result.boxes.boxes.size(0) != 0:
+            for i in range(result.masks.shape[0]):
+                mask = result.masks # Boxes object for bbox outputs
+                box = result.boxes
 
-        for i in range(result.masks.shape[0]):
-            mask = result.masks # Boxes object for bbox outputs
-            box = result.boxes
+                peduncle = PepperPeduncle(peduncle_count)
 
-            peduncle = PepperPeduncle(peduncle_count)
+                peduncle.mask = torch.Tensor(mask.segments[i])
+                peduncle.conf = box.conf[i]
+                peduncle.xywh = box.xywh[i].cpu().numpy()
 
-            peduncle.mask = torch.Tensor(mask.segments[i])
-            peduncle.conf = box.conf[i]
-            peduncle.xywh = box.xywh[i].cpu().numpy()
-
-            # detected_frame.add_detected_pepper_peduncle(peduncle)
-            peduncle_list[i] = peduncle
-            peduncle_count += 1
+                # detected_frame.add_detected_pepper_peduncle(peduncle)
+                peduncle_list[i] = peduncle
+                peduncle_count += 1
         # detected_frame.mask = result.masks.masks
         if show_result:
             for result in results:

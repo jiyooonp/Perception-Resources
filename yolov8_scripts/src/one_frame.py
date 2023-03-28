@@ -27,7 +27,7 @@ class OneFrame:
         self._pepper_detections: Dict[int, Pepper] = dict()
 
         self._pepper_fruit_detector: PepperFruitDetector = PepperFruitDetector(img_path,
-           yolo_weight_path = '/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/weights/pepper_fruit_best.pt')
+           yolo_weight_path = '/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/weights/pepper_fruit_best_2.pt')
         self._pepper_peduncle_detector: PepperPeduncleDetector = PepperPeduncleDetector(img_path,
             yolo_weight_path = '/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/weights/pepper_peduncle_best.pt')
 

@@ -39,7 +39,7 @@ class PepperFruitDetector:
         print("Detecting image: ", img_path)
 
         img = read_image(img_path)
-        img = red_to_green_2(img).astype('float32')
+        # img = red_to_green_2(img).astype('float32')
         results = self._model(img, conf=thresh)
         pepper_count = 0
 
@@ -79,7 +79,8 @@ class PepperFruitDetector:
             draw_pepper_fruits(detected_img)
 
 if __name__ == '__main__':
-    PepperDetection = PepperFruitDetector(file_path='/home/jy/PycharmProjects/Perception-Resources/dataset/testbed_video_to_img', yolo_weight_path="../weights/pepper_fruit_best.pt")
-    PepperDetection.run_detection(show_result=False)
+    # PepperDetection = PepperFruitDetector(file_path='/home/jy/PycharmProjects/Perception-Resources/dataset/testbed_video_to_img', yolo_weight_path="../weights/pepper_fruit_best.pt")
+    PepperDetection = PepperFruitDetector(file_path='/home/jy/PycharmProjects/Perception-Resources/dataset/peduncle', yolo_weight_path="../weights/pepper_fruit_best_2.pt")
+    PepperDetection.run_detection(img_path='/home/jy/PycharmProjects/Perception-Resources/dataset/peduncle', show_result=False)
     print(PepperDetection)
     PepperDetection.plot_results()
