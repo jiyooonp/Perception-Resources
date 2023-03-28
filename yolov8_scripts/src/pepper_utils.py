@@ -29,7 +29,7 @@ def get_all_image_path_in_folder(path):
                 rgb_file = dirs + os.sep + file_name
                 img_list.append(rgb_file)
     # print("all images in folder: ", img_list)
-    return img_list[:10]
+    return img_list[:]
 def read_image(img_path):
     img = cv2.imread(img_path)
     img = np.asarray(img)
@@ -130,7 +130,7 @@ def draw_pepper(one_frame):
         mask = pepper_peduncle.mask
         draw_bounding_polygon(pepper_peduncle.conf, mask, one_frame.img_shape, color=color)
     # plt.axis('off')
-    plt.savefig(f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_4/{img_name}_pepper_result.png",
+    plt.savefig(f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_7/{img_name}_pepper_result.png",
                 bbox_inches='tight', pad_inches = 1)
     # / home / jy / PycharmProjects / Perception - Resources / yolov8_scripts / src / results_3 / IMG_0971__1_fruit_result.png
     plt.clf()
@@ -152,7 +152,7 @@ def draw_pepper_fruits(detected_frame):
         h = int(xywh[3])
         draw_bounding_box( pepper.conf, x, y, w, h)
 
-    plt.savefig(f"results_3/{img_name}_fruit_result.png")
+    plt.savefig(f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_7/{img_name}_fruit_result.png")
     plt.clf()
     plt.cla()
 def draw_pepper_peduncles(detected_frame):
@@ -224,8 +224,8 @@ def match_pepper_fruit_peduncle(pepper_fruit_detections: Dict[int, PepperFruit],
             x, y, w, h = pepper_peduncle.xywh
             box2 = [[x-w/2 , y-h/2], [x+w/2 , y-h/2], [x+w/2 , y+h/2], [x-w/2 , y+h/2]]
             iou = calculate_iou(box1, box2)
-            print("iou", iou)
-            if dist<min_dist and is_above(pepper_fruit, pepper_peduncle) and iou>0:
+            # print("iou", iou)
+            if dist<min_dist and iou>0:
                 peduncle_match = pepper_peduncle
                 min_dist = dist
         if not peduncle_match:
