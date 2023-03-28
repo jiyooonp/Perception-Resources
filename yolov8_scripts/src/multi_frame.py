@@ -1,16 +1,12 @@
-from shapely.geometry import Polygon
-
-from typing import List
-
 from yolov8_scripts.src.one_frame import OneFrame
 from yolov8_scripts.src.pepper import Pepper
+from yolov8_scripts.src.pepper_utils import *
 
 
 class MultiFrame:
     def __init__(self):
         self._one_frames: List[OneFrame] = list()
         self._positive_peppers: List[Pepper] = list()
-
 
 
 box_1 = [[511, 41], [577, 41], [577, 76], [511, 76]]

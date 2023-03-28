@@ -1,10 +1,7 @@
 from pipeline import Perception
 
 if __name__=='__main__':
-    # img_path = '/home/jy/PycharmProjects/Perception-Resources/dataset/peduncle/pepper-plant-OPT-600x600.jpg'
-    # img_path = '/home/jy/PycharmProjects/Perception-Resources/dataset/peduncle/img_4223.jpg'
     img_path = '/home/jy/PycharmProjects/Perception-Resources/dataset/testbed_video_to_img'
-    # img_path = '/home/jy/PycharmProjects/Perception-Resources/dataset/colorful'
     pipeline = Perception(img_path, 0)
     pipeline.detect_peppers_in_folder()
 

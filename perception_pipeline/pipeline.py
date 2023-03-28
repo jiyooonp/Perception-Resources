@@ -47,6 +47,7 @@ class Perception:
         pass
     def process_image(self):
         #################################################################
+        # DO_NOT_DO
         # process the image to match the dim for yolo (prob don't need this)
         #################################################################
         pass
@@ -55,7 +56,7 @@ class Perception:
     # When base goes to one location, use the long range images and retreive
     # all the locations of peppers
     #####################################################################
-    def detect_peppers_one_frame(self, thresh=0.5):
+    def detect_peppers_one_frame(self, path, thresh=0.5):
         #################################################################
         # use yolov8_scripts and get the pepper locations
         # input:
@@ -64,19 +65,16 @@ class Perception:
         # output:
         #   locations: all the locations of the pepper boxes [conf, x, y] (N, 3)
         #################################################################
-        one_frame = OneFrame(self.source)
+        one_frame = OneFrame(path)
         one_frame.run()
         self.pepper = one_frame.pepper_detections
-        print("someting happened hopefully it is working")
-        print(self.pepper)
     def detect_peppers_in_folder(self):
         files = get_all_image_path_in_folder(self.source)
         for path in files:
-            one_frame = OneFrame(path)
-            one_frame.run()
-            # self.pepper = one_frame.pepper_detections
+            self.detect_peppers_one_frame(path)
     def detect_peppers_time_frame(self, frames, thresh=0.5):
         #################################################################
+        # JIYOON TODO
         # stack pepper locations over a timeframe time
         # input:
         #   frames: F number of frames to be stored in list
@@ -90,6 +88,7 @@ class Perception:
         # print(self.pepper_fruit)
     def clear_false_positives(self):
         #################################################################
+        # TODO
         # algorithm to take in a series of bounding boxes and output
         # true positive pepper locations
         # input:
@@ -120,7 +119,7 @@ class Perception:
         # output:
         #   self.peduncle_mask: idk what this form is
         #################################################################
-        self.peduncle_mask = None
+        self.peduncle_masks = self.pepper.pepper_peduncle_detections
     # def get_point_of_interaction(self):
     #     #################################################################
     #     # using self.peduncle_mask, calculate the point of interaction
@@ -179,7 +178,7 @@ class Perception:
 
     def get_peduncle_orientation(self):
         #################################################################
-        # calculate the orientation of the peduncle using self.peduncle_mask
+        # ISHU TODO        # calculate the orientation of the peduncle using self.peduncle_mask
         # output:
         #   self.peduncle_orienation: (x,y,z)
         #################################################################

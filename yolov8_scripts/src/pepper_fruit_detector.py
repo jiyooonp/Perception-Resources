@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 from ultralytics import YOLO
 import ultralytics
 from yolov8_scripts.src.pepper_fruit import PepperFruit
@@ -27,14 +26,12 @@ class PepperFruitDetector:
         return print_pepperdetection(self)
 
     def run_detection(self, img_path, show_result: bool = False, print_result: bool = False, thresh = 0.25):
-        print("Starting detection")
+        # print("Starting detection")
         self._imgs_path = get_all_image_path_in_folder(self._path)
-        # self.predict_peppers(show_result, print_result)
         return self.predict_pepper(img_path, show_result, print_result, thresh=thresh)
 
 
     def predict_pepper(self, img_path, show_result: bool = False, print_result: bool = False, thresh=0.25):
-        # detected_frame = OneFrame(img_path)
         pepper_list = dict()
         print("Detecting image: ", img_path)
 
@@ -52,7 +49,6 @@ class PepperFruitDetector:
                 conf = one_box.conf  # Class probabilities for classification outputs
                 pepper.xywh = xywh[0].cpu().numpy()
                 pepper.conf = conf
-                # detected_frame.add_detected_pepper_fruit(pepper)
                 pepper_list[pepper_count] = pepper
                 pepper_count += 1
 
@@ -75,11 +71,9 @@ class PepperFruitDetector:
         cnt = 0
         for detected_img in self._detected_frames:
             cnt +=1
-            print("Plotting image: ", cnt)
             draw_pepper_fruits(detected_img)
 
 if __name__ == '__main__':
-    # PepperDetection = PepperFruitDetector(file_path='/home/jy/PycharmProjects/Perception-Resources/dataset/testbed_video_to_img', yolo_weight_path="../weights/pepper_fruit_best.pt")
     PepperDetection = PepperFruitDetector(file_path='/home/jy/PycharmProjects/Perception-Resources/dataset/peduncle', yolo_weight_path="../weights/pepper_fruit_best_2.pt")
     PepperDetection.run_detection(img_path='/home/jy/PycharmProjects/Perception-Resources/dataset/peduncle', show_result=False)
     print(PepperDetection)

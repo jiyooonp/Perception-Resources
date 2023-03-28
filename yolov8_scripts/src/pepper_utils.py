@@ -13,9 +13,7 @@ from shapely import Polygon
 import geopandas as gpd
 from yolov8_scripts.src.pepper_fruit import PepperFruit
 from yolov8_scripts.src.pepper_peduncle import PepperPeduncle
-# from yolov8_scripts.src.detected_frame import OneFrame
 import math
-# from figures import BLUE, GRAY, RED, set_limits
 from shapely.plotting import plot_polygon, plot_points
 
 def get_img_size(img_path):
@@ -67,23 +65,18 @@ def draw_bounding_polygon(confidence,mask, img_shape, color, fill=True):
     :param img_shape: The shape of the image with
     :return: None.
     """
-    # print("mask: ", len(mask[0]), len(mask[0][0]))
-    # print("mask: ", mask)
 
     mask = torch.transpose(mask, 0, 1)
     polygon = Polygon(mask.T)
     x, y = polygon.exterior.xy
-    # print('img_shape: ', img_shape)
     x_scaled = [i * img_shape[1] for i in x]
     y_scaled = [i * img_shape[0] for i in y]
-    # print('x, y: ', x, y)
     if fill:
         plt.fill(x_scaled, y_scaled, color=color, alpha=0.7)
     else:
         plt.fill(x_scaled, y_scaled, color=color, alpha=1)
     plt.plot(*polygon.exterior.xy)
     # p = gpd.GeoSeries(polygon)
-    # p.plot()
 
 
 def put_title(detected_frame):
@@ -100,12 +93,8 @@ def draw_pepper(one_frame):
     for peduncle in one_frame.pepper_peduncle_detections.values():
         mask = peduncle.mask
         draw_bounding_polygon(peduncle.conf, mask, one_frame.img_shape, color='black', fill=False)
-        # plt.plot(peduncle.xywh[0], peduncle.xywh[1], '*')
-        # plt.text(peduncle.xywh[0], peduncle.xywh[1], f'({peduncle.xywh[0], peduncle.xywh[1]})')
     for pepper_fruit in one_frame.pepper_fruit_detections.values():
         xywh = pepper_fruit.xywh
-        # plt.plot(pepper_fruit.xywh[0], pepper_fruit.xywh[1], '*')
-        # plt.text(pepper_fruit.xywh[0], pepper_fruit.xywh[1], f'({pepper_fruit.xywh[0], pepper_fruit.xywh[1]})', color="blue")
         x = int(xywh[0])
         y = int(xywh[1])
         w = int(xywh[2])
@@ -129,10 +118,9 @@ def draw_pepper(one_frame):
 
         mask = pepper_peduncle.mask
         draw_bounding_polygon(pepper_peduncle.conf, mask, one_frame.img_shape, color=color)
-    # plt.axis('off')
+    plt.axis('off')
     plt.savefig(f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_7/{img_name}_pepper_result.png",
                 bbox_inches='tight', pad_inches = 1)
-    # / home / jy / PycharmProjects / Perception - Resources / yolov8_scripts / src / results_3 / IMG_0971__1_fruit_result.png
     plt.clf()
     plt.cla()
 
@@ -143,7 +131,7 @@ def draw_pepper_fruits(detected_frame):
 
     put_title(detected_frame)
     for pepper in detected_frame.pepper_fruit_detections:
-        print('drawing one pepper')
+        # print('drawing one pepper')
 
         xywh = pepper.xywh
         x = int(xywh[0])
@@ -197,16 +185,6 @@ def get_image_from_webcam():
     cv2.destroyAllWindows()
     return image
 
-# def match_pepper_fruit_peduncle(detected_frame: OneFrame):
-#     pepper_fruit_detections = detected_frame.pepper_fruit_detections
-#     pepper_peduncle_detections = detected_frame.pepper_peduncle_detections
-#
-#     pepper_fruit_peduncle_distances = []
-#     for pepper_fruit in pepper_fruit_detections:
-#         for pepper_peduncle in pepper_peduncle_detections:
-#             pepper_fruit_peduncle_distances.append(distance_between_pepper_fruit_peduncle(pepper_fruit, pepper_peduncle))
-#     pepper_fruit_peduncle_match = remove_duplicate_peduncles(pepper_fruit_peduncle_distances)
-#     return pepper_fruit_peduncle_match
 
 def is_above(pepper_fruit:PepperFruit, pepper_peduncle:PepperPeduncle):
     # print(pepper_fruit.xywh[1], pepper_peduncle.xywh[1])
@@ -224,7 +202,6 @@ def match_pepper_fruit_peduncle(pepper_fruit_detections: Dict[int, PepperFruit],
             x, y, w, h = pepper_peduncle.xywh
             box2 = [[x-w/2 , y-h/2], [x+w/2 , y-h/2], [x+w/2 , y+h/2], [x-w/2 , y+h/2]]
             iou = calculate_iou(box1, box2)
-            # print("iou", iou)
             if dist<min_dist and iou>0:
                 peduncle_match = pepper_peduncle
                 min_dist = dist
@@ -246,7 +223,6 @@ def remove_duplicate_peduncles(pepper_fruit_peduncle_distances: list):
 
     detetected_pepper_fruit = []
     detected_pepper_peduncle = []
-    clean_pepper_fruit_peduncle_distances = []
 
     for (pf, pp), d in pepper_fruit_peduncle_distances:
         detetected_pepper_fruit.append(pf)
@@ -254,18 +230,18 @@ def remove_duplicate_peduncles(pepper_fruit_peduncle_distances: list):
     duplicate_pepper_fruit = [item for item, count in collections.Counter(detetected_pepper_fruit).items() if count > 1]
     duplicate_pepper_peduncle = [item for item, count in collections.Counter(detected_pepper_peduncle).items() if count > 1]
 
-    pf_duplicate_list = list()
-    for pepper_fruit in duplicate_pepper_fruit: # index of peppers
-        duplicate_list = list()
-        for i in range(len(pepper_fruit_peduncle_distances)):
-            (pf, pp), d = pepper_fruit_peduncle_distances[i]
-            if pf == pepper_fruit:
-                duplicate_list.append(pepper_fruit_peduncle_distances[i])
-        pf_duplicate_list.append(duplicate_list)
-    pepper_fruit_delete = choose_unmatching(pf_duplicate_list)
-    for d in pepper_fruit_peduncle_distances:
-        if d in pepper_fruit_delete:
-            pepper_fruit_peduncle_distances.remove(d)
+    # pf_duplicate_list = list()
+    # for pepper_fruit in duplicate_pepper_fruit: # index of peppers
+    #     duplicate_list = list()
+    #     for i in range(len(pepper_fruit_peduncle_distances)):
+    #         (pf, pp), d = pepper_fruit_peduncle_distances[i]
+    #         if pf == pepper_fruit:
+    #             duplicate_list.append(pepper_fruit_peduncle_distances[i])
+    #     pf_duplicate_list.append(duplicate_list)
+    # pepper_fruit_delete = choose_unmatching(pf_duplicate_list)
+    # for d in pepper_fruit_peduncle_distances:
+    #     if d in pepper_fruit_delete:
+    #         pepper_fruit_peduncle_distances.remove(d)
 
     pp_duplicate_list = list()
     for pepper_peduncle in duplicate_pepper_peduncle: # index of peppers
@@ -286,12 +262,9 @@ def distance_between_pepper_fruit_peduncle(pepper_fruit: PepperFruit, pepper_ped
     pepper_fruit_xywh = pepper_fruit.xywh
     pepper_peduncle_xywh = pepper_peduncle.xywh
 
-    pepper_fruit_number = pepper_fruit.number
-    pepper_peduncle_number = pepper_peduncle.number
     pf_coords = [pepper_fruit_xywh[0].item(),pepper_fruit_xywh[1].item()]
     pp_coords = [pepper_peduncle_xywh[0].item(), pepper_peduncle_xywh[1].item()]
     distance = math.dist(pf_coords, pp_coords)
-    # return ((pepper_fruit_number, pepper_peduncle_number),distance)
     return distance
 
 def red_to_green(img):
@@ -338,9 +311,8 @@ def red_to_green_2(img):
     return retrack_original
 def calculate_iou(box_1, box_2):
     '''
-
-    :param box_1: 4 x 2 tl, tr, br, bl
-    :param box_2:
+    :param box_1: (4 x 2) tl, tr, br, bl
+    :param box_2: (4 x 2) tl, tr, br, bl
     :return: iou from 0-1
     '''
     # fig = plt.figure(1, dpi=90)
@@ -354,6 +326,7 @@ def calculate_iou(box_1, box_2):
     # plt.cla()
 
     iou = poly_1.intersection(poly_2).area/poly_1.union(poly_2).area
+
     return iou
 
 if __name__ == '__main__':
