@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.integrate import quad
+from PIL import Image
+import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from skimage.morphology import medial_axis
 
@@ -92,3 +93,19 @@ def determine_next_point(curve, poi, pepper_fruit_xywh, pepper_peduncle_xywh):
 
     return point_x, point_y
 
+
+def draw_poi(one_frame):
+    img = np.asarray(Image.open(one_frame.img_path))
+    img_name = one_frame.img_path.split('/')[-1].split('.')[0]
+    plt.imshow(img)
+
+    for pepper in one_frame.pepper_detections.values():
+        poi = pepper.pepper_peduncle.poi
+        plt.plot(poi[1], poi[0])
+
+    plt.axis('off')
+    plt.savefig(
+        f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_8/{img_name}_poi_result.png",
+        bbox_inches='tight', pad_inches=1)
+    plt.clf()
+    plt.cla()

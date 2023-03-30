@@ -5,6 +5,7 @@ from yolov8_scripts.src.pepper import Pepper
 from yolov8_scripts.src.pepper_fruit_detector import PepperFruitDetector
 from yolov8_scripts.src.pepper_peduncle_detector import PepperPeduncleDetector
 from yolov8_scripts.src.pepper_utils import *
+from yolov8_scripts.src.pepper_peduncle_utils import *
 
 
 class OneFrame:
@@ -87,6 +88,14 @@ class OneFrame:
                 self._pepper_detections[number] = pepper
                 number += 1
 
+    def determine_peduncle_poi(self):
+        for key, single_pepper in self._pepper_detections.items():
+            single_pepper.pepper_peduncle.set_point_of_interaction(single_pepper.pepper_fruit.xywh)
+
+    def determine_peduncle_orientation(self):
+        for key, single_pepper in self._pepper_detections.items():
+            single_pepper.pepper_peduncle.set_peduncle_orientation(single_pepper.pepper_fruit.xywh)
+
     def plot_pepper_fruit(self):
         draw_pepper_fruits(self)
 
@@ -96,6 +105,9 @@ class OneFrame:
     def plot_pepper(self):
         draw_pepper(self)
 
+    def plot_poi(self):
+        draw_poi(self)
+
     def run(self):
         self._pepper_fruit_detections = self._pepper_fruit_detector.run_detection(self.img_path, thresh=0.3,
                                                                                   show_result=False)
@@ -103,3 +115,6 @@ class OneFrame:
                                                                                         show_result=False)
         self.match_peppers()
         self.plot_pepper()
+
+        self.determine_peduncle_poi()
+        self.plot_poi()

@@ -13,17 +13,21 @@ from yolov8_scripts.src.pepper_fruit_detector import PepperFruitDetector
 from yolov8_scripts.src.pepper_peduncle_detector import PepperPeduncleDetector
 from yolov8_scripts.src.pepper_utils import *
 from yolov8_scripts.src.pepper_peduncle_utils import *
+
+
 # input: image
 class Perception:
-    def __init__(self, source, fps, threshold=0.5, save=True):
+    def __init__(self, source, fps, threshold=0.5, percentage=0.5, save=True):
         self.source = source
         self.start_time = time.time()
         self.fps = fps
         self.save = save
         self.threshold = threshold
+        self.percentage = percentage
         self.pepper_fruits = dict()
         self.pepper_peduncles = dict()
-        self.pepper = dict()
+        self.peppers = dict()
+
     def get_image(self):
         #################################################################
         # get image from source
@@ -33,6 +37,7 @@ class Perception:
             self.image = get_image_from_webcam()
         else:
             self.image = read_image(self.source)
+
     def get_depth(self, image, x, y):
         #################################################################
         # given an image and x, y coordinates, return the depth information
@@ -46,6 +51,7 @@ class Perception:
         #   d: depth of that point
         #################################################################
         pass
+
     def process_image(self):
         #################################################################
         # DO_NOT_DO
@@ -68,11 +74,15 @@ class Perception:
         #################################################################
         one_frame = OneFrame(path)
         one_frame.run()
-        self.pepper = one_frame.pepper_detections
+        self.pepper_fruits = one_frame.pepper_fruit_detections
+        self.pepper_peduncles = one_frame.pepper_peduncle_detections
+        self.peppers = one_frame.pepper_detections
+
     def detect_peppers_in_folder(self):
         files = get_all_image_path_in_folder(self.source)
         for path in files:
             self.detect_peppers_one_frame(path)
+
     def detect_peppers_time_frame(self, frames, thresh=0.5):
         #################################################################
         # JIYOON TODO
@@ -84,9 +94,10 @@ class Perception:
         #       number of frames F x [conf, x, y] (F, N, 3)
         #################################################################
         for i in range(frames):
-            pepper_fruit_detection = self.detect_peppers_one_frame(i, thresh)
-            self.pepper_fruit[i] = pepper_fruit_detection # store dictionary of pepper_fruit in frame number
+            pepper_detection = self.detect_peppers_one_frame(i, thresh)
+            self.pepper_fruit[i] = pepper_detection  # store dictionary of pepper in frame number
         # print(self.pepper_fruit)
+
     def clear_false_positives(self):
         #################################################################
         # TODO
@@ -113,53 +124,26 @@ class Perception:
         #   self.pepper = {"idx": None, "box": (L, T, R, D), "location": (xc, yc, d)}
         #################################################################
         pass
-    def get_peduncle_location(self):
+
+    def determine_pepper_order(self, arm_xyz):
         #################################################################
-        # for self.pepper, crop the image, run the segmentation model and
-        # get the segmented peduncle mask.
+        # Determine the order in which peppers must be picked
         # output:
-        #   self.peduncle_mask: idk what this form is
+        #   self.pepper.order must be set
         #################################################################
-        self.peduncle_masks = self.pepper.pepper_peduncle_detections
-    def get_point_of_interaction(self):
-        #################################################################
-        # using self.peduncle_mask, calculate the point of interaction
-        # input:
-        #   self.peduncle_mask
-        # output:
-        #   self.poi: (x, y, d)
-        #################################################################
+        pepper_distances = {}
+        for number, pepper in self.peppers:
+            poi = pepper.pepper_peduncle.poi
+            dist = np.linalg.norm(poi - arm_xyz)
+            pepper_distances[dist] = pepper
 
-        for key, single_pepper in self.pepper.items():
-            mask = single_pepper.pepper_peduncle.mask
-            pepper_fruit_xywh = single_pepper.pepper_fruit.xywh
-            pepper_peduncle_xywh = single_pepper.pepper_peduncle.xywh
-
-            single_pepper.pepper_peduncle.curve = fit_curve_to_mask(mask, pepper_fruit_xywh, pepper_peduncle_xywh)
-
-            total_curve_length = single_pepper.pepper_peduncle.curve.full_curve_length()
-
-            poi_x, poi_y = determine_poi(single_pepper.pepper_peduncle.curve, percentage, total_curve_length)
-            single_pepper.pepper_peduncle.poi = (poi_x, poi_y)
-
-    def get_peduncle_orientation(self):
-        #################################################################
-        # ISHU TODO        # calculate the orientation of the peduncle using self.peduncle_mask
-        # output:
-        #   self.peduncle_orienation: (x,y,z)
-        #################################################################
-        for key, single_pepper in self.pepper.items():
-            curve = single_pepper.pepper_peduncle.curve
-            poi = single_pepper.pepper_peduncle.poi
-            pepper_fruit_xywh = single_pepper.pepper_fruit.xywh
-            pepper_peduncle_xywh = single_pepper.pepper_peduncle.xywh
-
-            point_x, point_y = determine_next_point(curve, poi, pepper_fruit_xywh, pepper_peduncle_xywh)
-
-            poi_z = self.get_depth(img, poi[0], poi[1])
-            point_z = self.get_depth(img, point_x, point_y)
-
-            return point_x - poi[0], point_y - poi[1], point_z - poi_z
+        distances = list(pepper_distances.keys())
+        distances.sort()
+        order = 1
+        for i in distances:
+            pepper = pepper_distances[i]
+            pepper.order = order
+            order += 1
 
     #####################################################################
     # ROS related
