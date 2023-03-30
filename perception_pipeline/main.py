@@ -4,6 +4,7 @@ if __name__=='__main__':
     img_path = '/home/jy/PycharmProjects/Perception-Resources/dataset/testbed_video_to_img'
     pipeline = Perception(img_path, 0)
     pipeline.detect_peppers_in_folder()
+    pipeline.send_to_manipulator()
 
 
 '''

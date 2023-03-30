@@ -1,28 +1,41 @@
 import time
 import cv2
+import rospy
 import numpy as np
 import matplotlib.pyplot as plt
 
 from scipy.integrate import quad
 from skimage.measure import label
 from scipy.optimize import curve_fit
-from skimage.morphology import closing, medial_axis
+
+import sys
+sys.path.insert(0, '/home/shri/Perception_Resources/yolov8_scripts/src')
+import os
+print(os.getcwd())
 
 from yolov8_scripts.src.one_frame import OneFrame
+from yolov8_scripts.src.communication import Communication
 from yolov8_scripts.src.pepper_fruit_detector import PepperFruitDetector
 from yolov8_scripts.src.pepper_peduncle_detector import PepperPeduncleDetector
 from yolov8_scripts.src.pepper_utils import *
+from yolov8_scripts.src.pepper_peduncle_utils import *
+
+
 # input: image
 class Perception:
-    def __init__(self, source, fps, threshold=0.5, save=True):
+    def __init__(self, source, fps, threshold=0.5, percentage=0.5, save=True):
         self.source = source
         self.start_time = time.time()
         self.fps = fps
         self.save = save
         self.threshold = threshold
+        self.percentage = percentage
         self.pepper_fruits = dict()
         self.pepper_peduncles = dict()
-        self.pepper = dict()
+        self.peppers = dict()
+        self.one_frame = None
+        self.communication = Communication()
+
     def get_image(self):
         #################################################################
         # get image from source
@@ -32,6 +45,7 @@ class Perception:
             self.image = get_image_from_webcam()
         else:
             self.image = read_image(self.source)
+
     def get_depth(self, image, x, y):
         #################################################################
         # given an image and x, y coordinates, return the depth information
@@ -45,6 +59,7 @@ class Perception:
         #   d: depth of that point
         #################################################################
         pass
+
     def process_image(self):
         #################################################################
         # DO_NOT_DO
@@ -65,13 +80,17 @@ class Perception:
         # output:
         #   locations: all the locations of the pepper boxes [conf, x, y] (N, 3)
         #################################################################
-        one_frame = OneFrame(path)
-        one_frame.run()
-        self.pepper = one_frame.pepper_detections
+        self.one_frame = OneFrame(path)
+        self.one_frame.run()
+        self.pepper_fruits = self.one_frame.pepper_fruit_detections
+        self.pepper_peduncles = self.one_frame.pepper_peduncle_detections
+        self.peppers = self.one_frame.pepper_detections
+
     def detect_peppers_in_folder(self):
         files = get_all_image_path_in_folder(self.source)
         for path in files:
             self.detect_peppers_one_frame(path)
+
     def detect_peppers_time_frame(self, frames, thresh=0.5):
         #################################################################
         # JIYOON TODO
@@ -83,9 +102,10 @@ class Perception:
         #       number of frames F x [conf, x, y] (F, N, 3)
         #################################################################
         for i in range(frames):
-            pepper_fruit_detection = self.detect_peppers_one_frame(i, thresh)
-            self.pepper_fruit[i] = pepper_fruit_detection # store dictionary of pepper_fruit in frame number
+            pepper_detection = self.detect_peppers_one_frame(i, thresh)
+            self.pepper_fruit[i] = pepper_detection  # store dictionary of pepper in frame number
         # print(self.pepper_fruit)
+
     def clear_false_positives(self):
         #################################################################
         # TODO
@@ -112,78 +132,14 @@ class Perception:
         #   self.pepper = {"idx": None, "box": (L, T, R, D), "location": (xc, yc, d)}
         #################################################################
         pass
-    def get_peduncle_location(self):
-        #################################################################
-        # for self.pepper, crop the image, run the segmentation model and
-        # get the segmented peduncle mask.
-        # output:
-        #   self.peduncle_mask: idk what this form is
-        #################################################################
-        self.peduncle_masks = self.pepper.pepper_peduncle_detections
-    # def get_point_of_interaction(self):
-    #     #################################################################
-    #     # using self.peduncle_mask, calculate the point of interaction
-    #     # input:
-    #     #   self.peduncle_mask
-    #     # output:
-    #     #   self.poi: (x, y, d)
-    #     #################################################################
-    #     closed_img = closing(self.peduncle_mask)
-    #     medial_img, dist = medial_axis(closed_img, return_distance=True)
-    #     labels, num = label(medial_img, return_num=True)
-    #
-    #     poi_x = []
-    #     poi_y = []
-    #
-    #     for i in range(num):
-    #         x, y = np.where(labels == i + 1)
-    #
-    #         params1, cov1 = curve_fit(parabola, y, x)
-    #         curve_x = parabola(y, params1[0], params1[1], params1[2])
-    #         params2, cov2 = curve_fit(parabola, x, y)
-    #         curve_y = parabola(x, params2[0], params2[1], params2[2])
-    #
-    #         if np.linalg.norm(x - curve_x) < np.linalg.norm(y - curve_y):
-    #             # Sorted assuming that the pepper is hanging to the left
-    #             sy_x = np.array([x for _, x in sorted(zip(y, x))])
-    #             sy_y = np.array([y for y, _ in sorted(zip(y, x))])
-    #
-    #             a, b, c = params1
-    #             curve_x = parabola(sy_y, a, b, c)
-    #             full_length, _ = quad(dist_derivative, sy_y[0], sy_y[-1], args=(a, b))
-    #
-    #             for j in range(len(sy_y)):
-    #                 result, err = quad(dist_derivative, sy_y[0], sy_y[j], args=(a, b))
-    #                 if abs(abs(result) - self.threshold * abs(full_length)) < 2:
-    #                     poi_x.append(sy_y[j])
-    #                     poi_y.append(curve_x[j])  # May have to choose point on medial_axis instead
-    #                     break
-    #         else:
-    #             # Sorted assuming that the pepper is hanging upwards
-    #             sx_x = np.array([x for x, _ in sorted(zip(x, y))])
-    #             sx_y = np.array([y for _, y in sorted(zip(x, y))])
-    #
-    #             a, b, c = params2
-    #             curve_y = parabola(sx_x, a, b, c)
-    #             full_length, _ = quad(dist_derivative, sx_x[0], sx_x[-1], args=(a, b))
-    #
-    #             for j in range(len(sx_x)):
-    #                 result, err = quad(dist_derivative, sx_x[0], sx_x[j], args=(a, b))
-    #                 if abs(abs(result) - self.threshold * abs(full_length)) < 2:
-    #                     poi_x.append(curve_y[j])  # May have to choose point on medial_axis instead
-    #                     poi_y.append(sx_x[j])
-    #                     break
-    #
-    #     self.poi = np.array([poi_x, poi_y]).T
 
-    def get_peduncle_orientation(self):
+    def set_pepper_order(self, arm_xyz):
         #################################################################
-        # ISHU TODO        # calculate the orientation of the peduncle using self.peduncle_mask
+        # Determine the order in which peppers must be picked
         # output:
-        #   self.peduncle_orienation: (x,y,z)
+        #   self.pepper.order must be set
         #################################################################
-        pass
-
+        self.one_frame.determine_pepper_order(arm_xyz)
 
     #####################################################################
     # ROS related
@@ -194,7 +150,12 @@ class Perception:
         #################################################################
         # send the point of interaction to the manipulator over ROS
         #################################################################
-        pass
+        pepper = self.peppers.values()[0]
+        rospy.init_node('perception', anonymous=True)
+        rate = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            self.communication.poi_pub(pepper.pepper_peduncle.poi, pepper.pepper_peduncle.orientation)
+            rate.sleep()
 
 
     #####################################################################
