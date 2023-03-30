@@ -96,6 +96,20 @@ class OneFrame:
         for key, single_pepper in self._pepper_detections.items():
             single_pepper.pepper_peduncle.set_peduncle_orientation(single_pepper.pepper_fruit.xywh)
 
+    def determine_pepper_order(self, arm_xyz):
+        pepper_distances = {}
+        for _, pepper in self.pepper_detections.items():
+            poi = pepper.pepper_peduncle.poi
+            dist = np.linalg.norm(poi - arm_xyz)
+            pepper_distances[dist] = pepper
+
+        distances = list(pepper_distances.keys()).sort()
+        order = 1
+        for i in distances:
+            pepper = pepper_distances[i]
+            pepper.order = order
+            order += 1
+
     def plot_pepper_fruit(self):
         draw_pepper_fruits(self)
 
@@ -114,7 +128,7 @@ class OneFrame:
         self._pepper_peduncle_detections = self._pepper_peduncle_detector.run_detection(self.img_path, thresh=0.3,
                                                                                         show_result=False)
         self.match_peppers()
-        self.plot_pepper()
+        # self.plot_pepper()
 
         self.determine_peduncle_poi()
-        self.plot_poi()
+        # self.plot_poi()

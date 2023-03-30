@@ -1,14 +1,20 @@
 import time
 import cv2
+import rospy
 import numpy as np
 import matplotlib.pyplot as plt
 
 from scipy.integrate import quad
 from skimage.measure import label
 from scipy.optimize import curve_fit
-from skimage.morphology import closing, medial_axis
+
+import sys
+sys.path.insert(0, '/home/shri/Perception_Resources/yolov8_scripts/src')
+import os
+print(os.getcwd())
 
 from yolov8_scripts.src.one_frame import OneFrame
+from yolov8_scripts.src.communication import Communication
 from yolov8_scripts.src.pepper_fruit_detector import PepperFruitDetector
 from yolov8_scripts.src.pepper_peduncle_detector import PepperPeduncleDetector
 from yolov8_scripts.src.pepper_utils import *
@@ -27,6 +33,8 @@ class Perception:
         self.pepper_fruits = dict()
         self.pepper_peduncles = dict()
         self.peppers = dict()
+        self.one_frame = None
+        self.communication = Communication()
 
     def get_image(self):
         #################################################################
@@ -72,11 +80,11 @@ class Perception:
         # output:
         #   locations: all the locations of the pepper boxes [conf, x, y] (N, 3)
         #################################################################
-        one_frame = OneFrame(path)
-        one_frame.run()
-        self.pepper_fruits = one_frame.pepper_fruit_detections
-        self.pepper_peduncles = one_frame.pepper_peduncle_detections
-        self.peppers = one_frame.pepper_detections
+        self.one_frame = OneFrame(path)
+        self.one_frame.run()
+        self.pepper_fruits = self.one_frame.pepper_fruit_detections
+        self.pepper_peduncles = self.one_frame.pepper_peduncle_detections
+        self.peppers = self.one_frame.pepper_detections
 
     def detect_peppers_in_folder(self):
         files = get_all_image_path_in_folder(self.source)
@@ -125,25 +133,13 @@ class Perception:
         #################################################################
         pass
 
-    def determine_pepper_order(self, arm_xyz):
+    def set_pepper_order(self, arm_xyz):
         #################################################################
         # Determine the order in which peppers must be picked
         # output:
         #   self.pepper.order must be set
         #################################################################
-        pepper_distances = {}
-        for number, pepper in self.peppers:
-            poi = pepper.pepper_peduncle.poi
-            dist = np.linalg.norm(poi - arm_xyz)
-            pepper_distances[dist] = pepper
-
-        distances = list(pepper_distances.keys())
-        distances.sort()
-        order = 1
-        for i in distances:
-            pepper = pepper_distances[i]
-            pepper.order = order
-            order += 1
+        self.one_frame.determine_pepper_order(arm_xyz)
 
     #####################################################################
     # ROS related
@@ -154,7 +150,12 @@ class Perception:
         #################################################################
         # send the point of interaction to the manipulator over ROS
         #################################################################
-        pass
+        pepper = self.peppers.values()[0]
+        rospy.init_node('perception', anonymous=True)
+        rate = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            self.communication.poi_pub(pepper.pepper_peduncle.poi, pepper.pepper_peduncle.orientation)
+            rate.sleep()
 
 
     #####################################################################

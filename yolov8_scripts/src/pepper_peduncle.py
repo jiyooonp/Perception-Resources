@@ -12,7 +12,7 @@ class PepperPeduncle:
         self._xywh = None
         self._curve = Curve()
         self._poi = None
-        self._orientation = None
+        self._orientation = [1, 0, 0]
 
     @property
     def mask(self):
