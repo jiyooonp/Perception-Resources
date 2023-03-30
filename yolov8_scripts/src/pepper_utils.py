@@ -119,7 +119,7 @@ def draw_pepper(one_frame):
         mask = pepper_peduncle.mask
         draw_bounding_polygon(pepper_peduncle.conf, mask, one_frame.img_shape, color=color)
     plt.axis('off')
-    plt.savefig(f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_7/{img_name}_pepper_result.png",
+    plt.savefig(f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_8/{img_name}_pepper_result.png",
                 bbox_inches='tight', pad_inches = 1)
     plt.clf()
     plt.cla()

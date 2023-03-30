@@ -52,8 +52,8 @@ class PepperPeduncleDetector:
         result = results[0]
         if result.boxes.boxes.size(0) != 0:
             for i in range(result.masks.shape[0]):
-                mask = result.masks  # Boxes object for bbox outputs
-                box = result.boxes
+                mask = result.masks
+                box = result.boxes  # Boxes object for bbox outputs
 
                 peduncle = PepperPeduncle(peduncle_count)
 
