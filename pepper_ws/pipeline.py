@@ -1,24 +1,14 @@
-import time
-import cv2
-import rospy
-import numpy as np
-import matplotlib.pyplot as plt
-
-from scipy.integrate import quad
-from skimage.measure import label
-from scipy.optimize import curve_fit
-
-import sys
-sys.path.insert(0, '/home/shri/Perception_Resources/yolov8_scripts/src')
+# sys.path.insert(0, '/home/shri/Perception_Resources/yolov8_scripts/src')
 import os
+import time
+
+import rospy
+
 print(os.getcwd())
 
-from yolov8_scripts.src.one_frame import OneFrame
-from yolov8_scripts.src.communication import Communication
-from yolov8_scripts.src.pepper_fruit_detector import PepperFruitDetector
-from yolov8_scripts.src.pepper_peduncle_detector import PepperPeduncleDetector
-from yolov8_scripts.src.pepper_utils import *
-from yolov8_scripts.src.pepper_peduncle_utils import *
+from pepper_ws.one_frame import OneFrame
+from pepper_ws.communication import Communication
+from pepper_ws.pepper_utils import *
 
 
 # input: image
@@ -145,7 +135,6 @@ class Perception:
     # ROS related
     #####################################################################
 
-
     def send_to_manipulator(self):
         #################################################################
         # send the point of interaction to the manipulator over ROS
@@ -157,21 +146,19 @@ class Perception:
             self.communication.poi_pub(pepper.pepper_peduncle.poi, pepper.pepper_peduncle.orientation)
             rate.sleep()
 
-
     #####################################################################
     # VISUALIZATION related
     #####################################################################
 
-    
     def send_to_gui(self):
         #################################################################
         # send information to gui over ros
         #################################################################
         pass
+
     def get_from_gui(self):
         #################################################################
         # get information from gui over ros
         # such as commands (stop running/change fps/etc)
         #################################################################
         pass
-

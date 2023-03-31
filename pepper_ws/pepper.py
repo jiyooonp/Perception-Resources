@@ -1,9 +1,9 @@
-from yolov8_scripts.src.pepper_peduncle import PepperPeduncle
-from yolov8_scripts.src.pepper_fruit import PepperFruit
+from pepper_ws.pepper_fruit import PepperFruit
+from pepper_ws.pepper_peduncle import PepperPeduncle
 
 
 class Pepper:
-    def __init__(self, number:int, pf_number: int, pp_number: int):
+    def __init__(self, number: int, pf_number: int, pp_number: int):
         self._number = number
         self._order: int = -1
         self._pepper_fruit: PepperFruit = PepperFruit(pf_number)
@@ -39,4 +39,3 @@ class Pepper:
 
     def __str__(self):
         return f"Pepper #{self.number}"
-

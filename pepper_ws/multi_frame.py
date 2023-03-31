@@ -1,6 +1,8 @@
-from yolov8_scripts.src.one_frame import OneFrame
-from yolov8_scripts.src.pepper import Pepper
-from yolov8_scripts.src.pepper_utils import *
+from typing import List
+
+from pepper_ws.one_frame import OneFrame
+from pepper_ws.pepper import Pepper
+from pepper_ws.pepper_utils import *
 
 
 class MultiFrame:

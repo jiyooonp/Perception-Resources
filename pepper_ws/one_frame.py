@@ -1,11 +1,11 @@
 from typing import Optional, Tuple
 
-from yolov8_scripts.src import pepper_utils
-from yolov8_scripts.src.pepper import Pepper
-from yolov8_scripts.src.pepper_fruit_detector import PepperFruitDetector
-from yolov8_scripts.src.pepper_peduncle_detector import PepperPeduncleDetector
-from yolov8_scripts.src.pepper_utils import *
-from yolov8_scripts.src.pepper_peduncle_utils import *
+from pepper_ws import pepper_utils
+from pepper_ws.pepper import Pepper
+from pepper_ws.pepper_fruit_detector import PepperFruitDetector
+from pepper_ws.pepper_peduncle_detector import PepperPeduncleDetector
+from pepper_ws.pepper_peduncle_utils import *
+from pepper_ws.pepper_utils import *
 
 
 class OneFrame:
@@ -27,9 +27,9 @@ class OneFrame:
         self._pepper_detections: Dict[int, Pepper] = dict()
 
         self._pepper_fruit_detector: PepperFruitDetector = PepperFruitDetector(img_path,
-                                                                               yolo_weight_path='/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/weights/pepper_fruit_best_2.pt')
+                                                                               yolo_weight_path='/yolov8_scripts/weights/pepper_fruit_best_2.pt')
         self._pepper_peduncle_detector: PepperPeduncleDetector = PepperPeduncleDetector(img_path,
-                                                                                        yolo_weight_path='/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/weights/pepper_peduncle_best.pt')
+                                                                                        yolo_weight_path='/yolov8_scripts/weights/pepper_peduncle_best.pt')
 
     @property
     def img_shape(self):

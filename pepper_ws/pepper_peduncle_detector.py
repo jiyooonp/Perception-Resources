@@ -4,8 +4,8 @@ import torch
 import ultralytics
 from ultralytics import YOLO
 
-from yolov8_scripts.src.pepper_peduncle import PepperPeduncle
-from yolov8_scripts.src.pepper_utils import print_pepperdetection, get_all_image_path_in_folder, read_image, \
+from pepper_ws.pepper_peduncle import PepperPeduncle
+from pepper_ws.pepper_utils import print_pepperdetection, get_all_image_path_in_folder, read_image, \
     draw_pepper_peduncles
 
 
@@ -87,8 +87,8 @@ class PepperPeduncleDetector:
 
 if __name__ == '__main__':
     PepperPeduncleDetection = PepperPeduncleDetector(
-        file_path='/home/jy/PycharmProjects/Perception-Resources/dataset/peduncle',
-        yolo_weight_path="../weights/pepper_peduncle_best.pt")
+        file_path='/dataset/peduncle',
+        yolo_weight_path="../yolov8_scripts/weights/pepper_peduncle_best.pt")
     PepperPeduncleDetection.run_detection()
     print(PepperPeduncleDetection)
     PepperPeduncleDetection.plot_results()

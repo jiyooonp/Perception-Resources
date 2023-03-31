@@ -1,8 +1,11 @@
-from ultralytics import YOLO
-import ultralytics
-from yolov8_scripts.src.pepper_fruit import PepperFruit
-from yolov8_scripts.src.pepper_utils import print_pepperdetection, get_all_image_path_in_folder,read_image, draw_pepper_fruits, red_to_green_2
 from typing import List
+
+import ultralytics
+from ultralytics import YOLO
+
+from pepper_ws.pepper_fruit import PepperFruit
+from pepper_ws.pepper_utils import print_pepperdetection, get_all_image_path_in_folder, read_image
+
 
 class PepperFruitDetector:
     def __init__(self, file_path: str, yolo_weight_path: str):
@@ -14,10 +17,7 @@ class PepperFruitDetector:
         self._classes: List[str] = ["pepper"]
 
         self._imgs_path: List[str] = list()
-        # self._detected_frames: List[OneFrame] = list()
-    @property
-    def detected_frames(self):
-        return self._detected_frames
+
     @property
     def classes(self):
         return self._classes
@@ -25,11 +25,9 @@ class PepperFruitDetector:
     def __str__(self):
         return print_pepperdetection(self)
 
-    def run_detection(self, img_path, show_result: bool = False, print_result: bool = False, thresh = 0.25):
-        # print("Starting detection")
+    def run_detection(self, img_path, show_result: bool = False, print_result: bool = False, thresh=0.25):
         self._imgs_path = get_all_image_path_in_folder(self._path)
         return self.predict_pepper(img_path, show_result, print_result, thresh=thresh)
-
 
     def predict_pepper(self, img_path, show_result: bool = False, print_result: bool = False, thresh=0.25):
         pepper_list = dict()
@@ -65,16 +63,10 @@ class PepperFruitDetector:
 
         for img_path in self._imgs_path:
             detected_frame = self.predict_pepper(img_path, show_result, print_result)
-            self._detected_frames.append(detected_frame)
-    def plot_results(self):
-        print("Plotting results")
-        cnt = 0
-        for detected_img in self._detected_frames:
-            cnt +=1
-            draw_pepper_fruits(detected_img)
+
 
 if __name__ == '__main__':
-    PepperDetection = PepperFruitDetector(file_path='/home/jy/PycharmProjects/Perception-Resources/dataset/peduncle', yolo_weight_path="../weights/pepper_fruit_best_2.pt")
-    PepperDetection.run_detection(img_path='/home/jy/PycharmProjects/Perception-Resources/dataset/peduncle', show_result=False)
+    PepperDetection = PepperFruitDetector(file_path='/dataset/peduncle',
+                                          yolo_weight_path="../yolov8_scripts/weights/pepper_fruit_best_2.pt")
+    PepperDetection.run_detection(img_path='/dataset/peduncle', show_result=False)
     print(PepperDetection)
-    PepperDetection.plot_results()

@@ -1,14 +1,14 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from skimage.morphology import medial_axis
 
-from yolov8_scripts.src.curve import Curve
+from pepper_ws.curve import Curve
 
 
 def parabola(t, params):
-    return params[0]*t**2 + params[1]*t + params[2]
+    return params[0] * t ** 2 + params[1] * t + params[2]
 
 
 def fit_curve_to_mask(mask, pepper_fruit_xywh, pepper_peduncle_xywh):
@@ -64,10 +64,10 @@ def fit_curve_to_mask(mask, pepper_fruit_xywh, pepper_peduncle_xywh):
 def determine_poi(curve, percentage, total_curve_length):
     for idx in range(len(curve.curve_y)):
         curve_length = curve.curve_length(idx)
-        if abs(curve_length - percentage*total_curve_length) < 2:
+        if abs(curve_length - percentage * total_curve_length) < 2:
             return curve.curve_x[idx], curve.curve_y[idx]
 
-    return curve.curve_x[len(curve.curve_y)//2], curve.curve_y[len(curve.curve_y)//2]
+    return curve.curve_x[len(curve.curve_y) // 2], curve.curve_y[len(curve.curve_y) // 2]
 
 
 def determine_next_point(curve, poi, pepper_fruit_xywh, pepper_peduncle_xywh):

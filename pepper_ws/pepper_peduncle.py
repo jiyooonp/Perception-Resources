@@ -1,10 +1,8 @@
-import numpy as np
-from skimage.morphology import medial_axis
-from yolov8_scripts.src.curve import Curve
-from yolov8_scripts.src.pepper_peduncle_utils import *
+from pepper_ws.pepper_peduncle_utils import *
+
 
 class PepperPeduncle:
-    def __init__(self, number:int, mask = None, conf=None, percentage=0.5):
+    def __init__(self, number: int, mask=None, conf=None, percentage=0.5):
         self.number: int = number
         self._mask = mask
         self._conf: float = conf
