@@ -1,10 +1,12 @@
+#!/usr/bin/env python3
+import rospy 
 from pipeline import Perception
 
 if __name__ == '__main__':
     # img_path = '../dataset/testbed_video_to_img'
-    img_path = '../dataset/test'
+    img_path = '/test'
     pipeline = Perception(img_path, 0)
-    pipeline.detect_peppers_in_folder()
+    # pipeline.detect_peppers_in_folder()
     pipeline.send_to_manipulator()
 
 '''

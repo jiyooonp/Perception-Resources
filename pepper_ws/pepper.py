@@ -1,5 +1,5 @@
-from pepper_ws.pepper_fruit import PepperFruit
-from pepper_ws.pepper_peduncle import PepperPeduncle
+from pepper_fruit import PepperFruit
+from pepper_peduncle import PepperPeduncle
 
 
 class Pepper:

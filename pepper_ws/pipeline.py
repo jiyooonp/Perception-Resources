@@ -6,9 +6,9 @@ import rospy
 
 print(os.getcwd())
 
-from pepper_ws.one_frame import OneFrame
-from pepper_ws.communication import Communication
-from pepper_ws.pepper_utils import *
+from one_frame import OneFrame
+from communication import Communication
+from pepper_utils import *
 
 
 # input: image
@@ -78,6 +78,7 @@ class Perception:
 
     def detect_peppers_in_folder(self):
         files = get_all_image_path_in_folder(self.source)
+        print("wt:", files)
         for path in files:
             self.detect_peppers_one_frame(path)
 
@@ -139,11 +140,12 @@ class Perception:
         #################################################################
         # send the point of interaction to the manipulator over ROS
         #################################################################
-        pepper = self.peppers.values()[0]
-        rospy.init_node('perception', anonymous=True)
+        # print(self.peppers.values())
+        # pepper = self.peppers.values()[0]
         rate = rospy.Rate(10)
+
         while not rospy.is_shutdown():
-            self.communication.poi_pub(pepper.pepper_peduncle.poi, pepper.pepper_peduncle.orientation)
+            self.communication.poi_pub_fn([0.4, -0.2, 0.2], None)
             rate.sleep()
 
     #####################################################################

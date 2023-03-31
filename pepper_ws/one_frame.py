@@ -1,11 +1,12 @@
 from typing import Optional, Tuple
 
-from pepper_ws import pepper_utils
-from pepper_ws.pepper import Pepper
-from pepper_ws.pepper_fruit_detector import PepperFruitDetector
-from pepper_ws.pepper_peduncle_detector import PepperPeduncleDetector
-from pepper_ws.pepper_peduncle_utils import *
-from pepper_ws.pepper_utils import *
+import pepper_utils
+from pepper import Pepper
+from pepper_fruit_detector import PepperFruitDetector
+from pepper_peduncle_detector import PepperPeduncleDetector
+from pepper_peduncle_utils import *
+from pepper_utils import *
+import os
 
 
 class OneFrame:
@@ -26,10 +27,11 @@ class OneFrame:
         self._pepper_peduncle_detections: Dict[int.PepperPeduncle] = dict()
         self._pepper_detections: Dict[int, Pepper] = dict()
 
+        print("weights path: ", os.getcwd())
         self._pepper_fruit_detector: PepperFruitDetector = PepperFruitDetector(img_path,
-                                                                               yolo_weight_path='/yolov8_scripts/weights/pepper_fruit_best_2.pt')
+                                                                               yolo_weight_path=os.getcwd()+'/pepper_ws/weights/pepper_fruit_best_2.pt')
         self._pepper_peduncle_detector: PepperPeduncleDetector = PepperPeduncleDetector(img_path,
-                                                                                        yolo_weight_path='/yolov8_scripts/weights/pepper_peduncle_best.pt')
+                                                                                        yolo_weight_path=os.getcwd()+'/pepper_ws/weights/pepper_peduncle_best.pt')
 
     @property
     def img_shape(self):
@@ -125,10 +127,14 @@ class OneFrame:
     def run(self):
         self._pepper_fruit_detections = self._pepper_fruit_detector.run_detection(self.img_path, thresh=0.3,
                                                                                   show_result=False)
+        print("what ever", self._pepper_fruit_detections )
+        self.plot_pepper_fruit()
         self._pepper_peduncle_detections = self._pepper_peduncle_detector.run_detection(self.img_path, thresh=0.3,
                                                                                         show_result=False)
+        self.plot_pepper_peduncle()
         self.match_peppers()
-        # self.plot_pepper()
+        self.plot_pepper()
+        
 
         self.determine_peduncle_poi()
         # self.plot_poi()

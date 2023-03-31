@@ -3,8 +3,8 @@ from typing import List
 import ultralytics
 from ultralytics import YOLO
 
-from pepper_ws.pepper_fruit import PepperFruit
-from pepper_ws.pepper_utils import print_pepperdetection, get_all_image_path_in_folder, read_image
+from pepper_fruit import PepperFruit
+from pepper_utils import print_pepperdetection, get_all_image_path_in_folder, read_image
 
 
 class PepperFruitDetector:

@@ -1,11 +1,13 @@
 from typing import List
 
 import torch
+import numpy as np
 import ultralytics
 from ultralytics import YOLO
+import matplotlib.pyplot as plt
 
-from pepper_ws.pepper_peduncle import PepperPeduncle
-from pepper_ws.pepper_utils import print_pepperdetection, get_all_image_path_in_folder, read_image, \
+from pepper_peduncle import PepperPeduncle
+from pepper_utils import print_pepperdetection, get_all_image_path_in_folder, read_image, \
     draw_pepper_peduncles
 
 
@@ -56,8 +58,23 @@ class PepperPeduncleDetector:
                 box = result.boxes  # Boxes object for bbox outputs
 
                 peduncle = PepperPeduncle(peduncle_count)
+                print("11111111111111111111111111111111")
+                print(result.masks)
 
                 peduncle.mask = torch.Tensor(mask.segments[i])
+                # print(peduncle.mask.size())
+                # # peduncle.segment = mask.data.reshape((mask.shape[1], mask.shape[2]))
+                # peduncle.segment = np.zeros((img.shape[0], img.shape[1]))
+                # print(peduncle.segment.shape)
+                # for i in range(peduncle.mask.size()[0]):
+                #     print('i,', i)
+                #     x, y = peduncle.mask[i, :]
+                #     print(x, y)
+                #     peduncle.segment[int(peduncle.mask[i, 0]), int(peduncle.mask[i, 1])] = 1
+                # print("==========", peduncle.mask.shape)
+                peduncle.segment = mask.data.T
+                plt.imshow(peduncle.segment)
+                plt.savefig("please.png")
                 peduncle.conf = box.conf[i]
                 peduncle.xywh = box.xywh[i].cpu().numpy()
 

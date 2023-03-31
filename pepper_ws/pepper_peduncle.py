@@ -1,5 +1,5 @@
-from pepper_ws.pepper_peduncle_utils import *
-
+from pepper_peduncle_utils import *
+import os
 
 class PepperPeduncle:
     def __init__(self, number: int, mask=None, conf=None, percentage=0.5):
@@ -11,7 +11,8 @@ class PepperPeduncle:
         self._curve = Curve()
         self._poi = None
         self._orientation = [1, 0, 0]
-
+        self._segment = None
+    
     @property
     def mask(self):
         return self._mask
@@ -62,12 +63,22 @@ class PepperPeduncle:
     def orientation(self, value):
         self._orientation = value
 
+    @property
+    def segment(self):
+        return self._segment
+
+    @segment.setter
+    def segment(self, value):
+        self._segment = value
+
     def set_point_of_interaction(self, pepper_fruit_xywh):
-        self._curve = fit_curve_to_mask(self._mask, pepper_fruit_xywh, self._xywh)
+        plt.imshow(self._mask)
+        plt.savefig(f"{os.getcwd()}/result/hi.png")
+        self._curve = fit_curve_to_mask(self._segment, pepper_fruit_xywh, self._xywh)
         total_curve_length = self._curve.full_curve_length()
 
         poi_x, poi_y = determine_poi(self._curve, self._percentage, total_curve_length)
-        poi_z = self.get_depth(img, poi_x, poi_y)
+        poi_z = 0 #self.get_depth(img, poi_x, poi_y)
 
         self._poi = (poi_x, poi_y, poi_z)
 

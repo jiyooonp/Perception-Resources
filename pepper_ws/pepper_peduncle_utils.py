@@ -1,26 +1,37 @@
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('TkAgg')
 import numpy as np
 from PIL import Image
 from scipy.optimize import curve_fit
 from skimage.morphology import medial_axis
 
-from pepper_ws.curve import Curve
+from curve import Curve
 
 
-def parabola(t, params):
-    return params[0] * t ** 2 + params[1] * t + params[2]
+def parabola(t, a, b, c):
+    # print("params", params)
+    return a * t ** 2 + b * t + c
 
 
 def fit_curve_to_mask(mask, pepper_fruit_xywh, pepper_peduncle_xywh):
     curve = Curve()
+    
 
-    medial_img, _ = medial_axis(mask, return_distance=True)
+    medial_img, _ = medial_axis(mask.numpy(), return_distance=True)
+    plt.imshow(medial_img)
+    plt.savefig("hehe.png")
+    # plt.show()
     x, y = np.where(medial_img == 1)
-
+    print(f"x: {x}, y: {y}")
     params1, _ = curve_fit(parabola, y, x)
-    fit_curve_x = parabola(y, params1)
+    print("params1", params1)
+    a, b, c = params1
+    fit_curve_x = parabola(y, a, b, c)
     params2, _ = curve_fit(parabola, x, y)
-    fit_curve_y = parabola(x, params2)
+    a, b, c = params2
+    print("params2", params2)
+    fit_curve_y = parabola(x, a, b, c)
 
     if np.linalg.norm(x - fit_curve_x) < np.linalg.norm(y - fit_curve_y):
         curve.parabola_direction = 'vertical'

@@ -11,8 +11,8 @@ import torch
 from PIL import Image
 from shapely import Polygon
 
-from pepper_ws.pepper_fruit import PepperFruit
-from pepper_ws.pepper_peduncle import PepperPeduncle
+from pepper_fruit import PepperFruit
+from pepper_peduncle import PepperPeduncle
 
 
 def get_img_size(img_path):
@@ -21,8 +21,10 @@ def get_img_size(img_path):
 
 
 def get_all_image_path_in_folder(path):
+    print("I am at", os.getcwd())
+    print('I want ', os.getcwd()+path)
     img_list = list()
-    for dirs, subdir, files in os.walk(path):
+    for dirs, subdir, files in os.walk(os.getcwd()+path):
         for file_name in files:
             if file_name.endswith(".jpeg") or file_name.endswith(".jpg") or file_name.endswith(".png"):
                 rgb_file = dirs + os.sep + file_name
@@ -51,7 +53,7 @@ def print_result_masks(detected_img):
         # draw_bounding_box(result.orig_img, box.cls, box.conf, x, y, x + w, y - h)
 
 
-def draw_bounding_box(confidence, x, y, w, h, color, fill=False):
+def draw_bounding_box(confidence, x, y, w, h, color="blue", fill=False):
     # Get the current reference
     ax = plt.gca()
 
@@ -68,7 +70,7 @@ def draw_bounding_box(confidence, x, y, w, h, color, fill=False):
     plt.text(x - w / 2, y - h / 2, round(float(confidence[0]), 2), color='red', fontsize=10)  # round(confidence[0], 2)
 
 
-def draw_bounding_polygon(confidence, mask, img_shape, color, fill=True):
+def draw_bounding_polygon(confidence, mask, img_shape, color="blue", fill=True):
     """
     Draw the bounding polygons associated with a peduncle.
     :param confidence: Confidence score associated with a mask.
@@ -134,7 +136,7 @@ def draw_pepper(one_frame):
         draw_bounding_polygon(pepper_peduncle.conf, mask, one_frame.img_shape, color=color)
     plt.axis('off')
     plt.savefig(
-        f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_8/{img_name}_pepper_result.png",
+        f"{os.getcwd()}/result/{img_name}_pepper_result.png", 
         bbox_inches='tight', pad_inches=1)
     plt.clf()
     plt.cla()
@@ -146,7 +148,7 @@ def draw_pepper_fruits(detected_frame):
     plt.imshow(img)
 
     put_title(detected_frame)
-    for pepper in detected_frame.pepper_fruit_detections:
+    for pepper in detected_frame.pepper_fruit_detections.values():
         # print('drawing one pepper')
 
         xywh = pepper.xywh
@@ -157,7 +159,7 @@ def draw_pepper_fruits(detected_frame):
         draw_bounding_box(pepper.conf, x, y, w, h)
 
     plt.savefig(
-        f"/home/jy/PycharmProjects/Perception-Resources/yolov8_scripts/src/results_7/{img_name}_fruit_result.png")
+        f"{os.getcwd()}/result/{img_name}_fruit_result.png")
     plt.clf()
     plt.cla()
 
@@ -167,11 +169,11 @@ def draw_pepper_peduncles(detected_frame):
     img_name = detected_frame.img_path.split('/')[-1].split('.')[0]
     plt.imshow(img)
     put_title(detected_frame)
-    for peduncle in detected_frame.pepper_peduncle_detections:
+    for peduncle in detected_frame.pepper_peduncle_detections.values():
         mask = peduncle.mask
         draw_bounding_polygon(peduncle.conf, mask, detected_frame.img_shape)
 
-    plt.savefig(f"results_2/{img_name}_peduncle_result.png")
+    plt.savefig(f"{os.getcwd()}/result/{img_name}_peduncle_result.png")
     plt.clf()
     plt.cla()
 
