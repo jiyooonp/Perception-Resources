@@ -11,7 +11,6 @@ class PepperPeduncle:
         self._curve = Curve()
         self._poi = None
         self._orientation = [1, 0, 0]
-        self._segment = None
     
     @property
     def mask(self):
@@ -63,18 +62,10 @@ class PepperPeduncle:
     def orientation(self, value):
         self._orientation = value
 
-    @property
-    def segment(self):
-        return self._segment
-
-    @segment.setter
-    def segment(self, value):
-        self._segment = value
-
-    def set_point_of_interaction(self, pepper_fruit_xywh):
+    def set_point_of_interaction(self, img_shape, pepper_fruit_xywh):
         plt.imshow(self._mask)
         plt.savefig(f"{os.getcwd()}/result/hi.png")
-        self._curve = fit_curve_to_mask(self._segment, pepper_fruit_xywh, self._xywh)
+        self._curve = fit_curve_to_mask(self._mask, img_shape, pepper_fruit_xywh, self._xywh)
         total_curve_length = self._curve.full_curve_length()
 
         poi_x, poi_y = determine_poi(self._curve, self._percentage, total_curve_length)

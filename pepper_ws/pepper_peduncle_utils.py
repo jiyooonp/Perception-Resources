@@ -14,11 +14,18 @@ def parabola(t, a, b, c):
     return a * t ** 2 + b * t + c
 
 
-def fit_curve_to_mask(mask, pepper_fruit_xywh, pepper_peduncle_xywh):
-    curve = Curve()
-    
+def get_segment_from_mask(mask, img_shape):
+    segment = np.zeros((img_shape[0], img_shape[1]))
+    for i in range(len(mask)):
+        segment[mask[i, 0], mask[i, 1]] = 1
+    return segment
 
-    medial_img, _ = medial_axis(mask.numpy(), return_distance=True)
+
+def fit_curve_to_mask(mask, img_shape, pepper_fruit_xywh, pepper_peduncle_xywh):
+    curve = Curve()
+    segment = get_segment_from_mask(mask, img_shape)
+
+    medial_img, _ = medial_axis(segment, return_distance=True)
     plt.imshow(medial_img)
     plt.savefig("hehe.png")
     # plt.show()
