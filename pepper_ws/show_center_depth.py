@@ -3,6 +3,7 @@ import rospy
 from sensor_msgs.msg import Image as msg_Image
 from sensor_msgs.msg import CameraInfo, PointCloud2
 from cv_bridge import CvBridge, CvBridgeError
+from std_msgs.msg import Float32
 import sys
 import os
 import numpy as np
@@ -12,120 +13,56 @@ import matplotlib.pyplot as plt
 if not hasattr(rs2, 'intrinsics'):
     import pyrealsense2.pyrealsense2 as rs2
 
+
 class ImageListener:
-    def __init__(self, depth_image_topic, depth_info_topic, point_cloud_topic, aligned_topic) :
+    def __init__(self, image_topic, aligned_topic, depth_pub_topic) :
         self.bridge = CvBridge()
-        # self.sub = rospy.Subscriber(depth_image_topic, msg_Image, self.imageDepthCallback)
-        # self.sub_info = rospy.Subscriber(depth_info_topic, CameraInfo, self.imageDepthInfoCallback)
-        # self.point_sub = rospy.Subscriber(point_cloud_topic, PointCloud2, self.pointTopicCallback)
+        self.camera_sub = rospy.Subscriber(image_topic, msg_Image, self.cameraCallback)
         self.aligned_sub = rospy.Subscriber(aligned_topic, msg_Image, self.alignedTopicCallback)
-        confidence_topic = depth_image_topic.replace('depth', 'confidence')
-        self.sub_conf = rospy.Subscriber(confidence_topic, msg_Image, self.confidenceCallback)
-        self.intrinsics = None
-        self.pix = None
-        self.pix_grade = None
+        self.depth_img = None
+        self.rgb_img = None
+        self.depth_pub = rospy.Publisher(depth_pub_topic, Float32)
+
     def alignedTopicCallback(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, data.encoding)
-            print(f"shape: {cv_image.shape}")
-            print(f"encoding: {data.encoding}")
-            print(cv_image)
+            self.depth_img = cv_image
+            # h, w = self.depth_img.shape # 480 640
+            h, w = 480, 640
+            # import ipdb; ipdb.settrace();
             plt.imshow(cv_image)
-            plt.show()
-            plt.close()
+            # plt.xlim()
 
-        except CvBridgeError as e:
-            print(e)
-            return
-        except ValueError as e:
-            return
-    
-    def pointTopicCallback(self, data):
-        try:
-            print("printing")
-            print(f"{data.height}, {data.width}, { len(data.data)}")
-        except:
-            print("not working ")
+            for wi in range(0, w-10, 60):
+                for hi in range(0, h-1, 20):
+                    # print('limits', plt.xlim(), '====', plt.ylim())
+# limits (-0.5, 639.5) ==== (479.5, -0.5)
 
-    def imageDepthCallback(self, data):
-        try:
-            cv_image = self.bridge.imgmsg_to_cv2(data, data.encoding)
-            # pick one pixel among all the pixels with the closest range:
-            indices = np.array(np.where(cv_image == cv_image[cv_image > 0].min()))[:,0]
-            pix = (indices[1], indices[0])
-            self.pix = pix
-            line = '\rDepth at pixel(%3d, %3d): %7.1f(mm).' % (pix[0], pix[1], cv_image[pix[1], pix[0]])
-            print(f"{cv_image.shape}")
-            print(cv_image)
-            plt.imshow(cv_image)
+                    print(wi, hi)
+                    plt.text(wi, hi, self.depth_img[hi, wi])
+            # plt.plot(100, 200, 'ro')
             plt.show()
 
-            if self.intrinsics:
-                depth = cv_image[pix[1], pix[0]]
-                result = rs2.rs2_deproject_pixel_to_point(self.intrinsics, [pix[0], pix[1]], depth)
-                line += '  Coordinate: %8.2f %8.2f %8.2f.' % (result[0], result[1], result[2])
-            if (not self.pix_grade is None):
-                line += ' Grade: %2d' % self.pix_grade
-            line += '\r'
-            sys.stdout.write(line)
-            sys.stdout.flush()
-
         except CvBridgeError as e:
             print(e)
-            return
-        except ValueError as e:
-            return
+            return    
 
-    def confidenceCallback(self, data):
+    def cameraCallback(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, data.encoding)
-            grades = np.bitwise_and(cv_image >> 4, 0x0f)
-            if (self.pix):
-                self.pix_grade = grades[self.pix[1], self.pix[0]]
+            self.rgb_img = cv_image
         except CvBridgeError as e:
             print(e)
             return
 
-
-
-    def imageDepthInfoCallback(self, cameraInfo):
-        try:
-            if self.intrinsics:
-                return
-            self.intrinsics = rs2.intrinsics()
-            self.intrinsics.width = cameraInfo.width
-            self.intrinsics.height = cameraInfo.height
-            self.intrinsics.ppx = cameraInfo.K[2]
-            self.intrinsics.ppy = cameraInfo.K[5]
-            self.intrinsics.fx = cameraInfo.K[0]
-            self.intrinsics.fy = cameraInfo.K[4]
-            if cameraInfo.distortion_model == 'plumb_bob':
-                self.intrinsics.model = rs2.distortion.brown_conrady
-            elif cameraInfo.distortion_model == 'equidistant':
-                self.intrinsics.model = rs2.distortion.kannala_brandt4
-            self.intrinsics.coeffs = [i for i in cameraInfo.D]
-        except CvBridgeError as e:
-            print(e)
-            return
 
 def main():
-    depth_image_topic = '/camera/depth/image_rect_raw'
-    depth_info_topic = '/camera/depth/camera_info'
-    point_cloud_topic = "/camera/depth/color/points"
+    image_topic = '/camera/color/image_raw'
     aligned_topic = '/camera/aligned_depth_to_color/image_raw'
-
-    print ('')
-    print ('show_center_depth.py')
-    print ('--------------------')
-    print ('App to demontrate the usage of the /camera/depth topics.')
-    print ('')
-    print ('Application subscribes to %s and %s topics.' % (depth_image_topic, depth_info_topic))
-    print ('Application then calculates and print the range to the closest object.')
-    print ('If intrinsics data is available, it also prints the 3D location of the object')
-    print ('If a confedence map is also available in the topic %s, it also prints the confidence grade.' % depth_image_topic.replace('depth', 'confidence'))
-    print ('')
+    depth_pub_topic = ''
     
-    listener = ImageListener(depth_image_topic, depth_info_topic, point_cloud_topic, aligned_topic)
+    
+    listener = ImageListener(image_topic, aligned_topic)
     rospy.spin()
 
 if __name__ == '__main__':
